@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<title>ArbBot Manual v2.1</title>
+<style>
+:root{
+  --bg:#03080f;--bg2:#060e1c;--bg3:#091425;
+  --border:#0e1f35;--border2:#172d4a;
+  --green:#00ff88;--green2:rgba(0,255,136,.12);--green3:rgba(0,255,136,.05);
+  --yellow:#f5c842;--yellow2:rgba(245,200,66,.1);
+  --red:#ff4466;--red2:rgba(255,68,102,.1);
+  --blue:#4da6ff;--blue2:rgba(77,166,255,.1);
+  --text:#c8ddf0;--text2:#6a8aaa;--text3:#3a5570;
+  --r:5px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:linear-gradient(rgba(0,255,136,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,.015) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(0,255,136,.04),transparent);pointer-events:none;z-index:0}
+#app{position:relative;z-index:1;padding:10px;max-width:1700px;margin:0 auto}
+#header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);margin-bottom:8px;flex-wrap:wrap}
+.logo-text{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:var(--green);letter-spacing:2px;text-shadow:0 0 20px rgba(0,255,136,.4)}
+.logo-sub{font-size:8px;color:var(--text3);letter-spacing:2px;margin-top:-2px}
+.status-pill{display:flex;align-items:center;gap:5px;padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;font-size:8px}
+.sdot{width:7px;height:7px;border-radius:50%;background:#2a3a55;flex-shrink:0;transition:.3s}
+.sdot.scan{background:var(--yellow);box-shadow:0 0 8px var(--yellow)}
+.sdot.ok{background:var(--green);box-shadow:0 0 8px var(--green)}
+#btn-start{margin-left:auto;padding:7px 22px;font-size:13px;font-weight:700;cursor:pointer;background:var(--green3);border:1px solid var(--green);border-radius:var(--r);color:var(--green);transition:.2s;font-family:'JetBrains Mono',monospace;letter-spacing:1px}
+#btn-start:hover{background:var(--green2);box-shadow:0 0 20px rgba(0,255,136,.2)}
+#btn-start.stop{background:var(--red2);border-color:var(--red);color:var(--red)}
+#stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:6px;margin-bottom:8px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:8px 12px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,136,.3),transparent)}
+.stat-lbl{font-size:7px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.stat-val{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--text);line-height:1}
+.stat-val.green{color:var(--green);text-shadow:0 0 15px rgba(0,255,136,.3)}
+.stat-val.yellow{color:var(--yellow)}
+.stat-val.blue{color:var(--blue)}
+#speed-bar{display:flex;align-items:center;gap:5px;margin-bottom:8px;flex-wrap:wrap;padding:6px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r)}
+.spd{background:var(--bg3);border:1px solid var(--border);border-radius:3px;color:var(--text3);font-size:8px;padding:3px 9px;cursor:pointer;font-family:inherit;transition:.15s}
+.spd:hover,.spd.active{border-color:var(--green);color:var(--green)}
+.qfilt{background:var(--bg3);border:1px solid var(--border);border-radius:3px;color:var(--text3);font-size:8px;padding:3px 9px;cursor:pointer;font-family:inherit;transition:.15s}
+.qfilt.on{border-color:var(--blue);color:var(--blue)}
+.sep{color:var(--border2);margin:0 3px}
+#main{display:grid;grid-template-columns:1fr 355px;gap:8px}
+@media(max-width:960px){#main{grid-template-columns:1fr}}
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.panel-hdr{padding:8px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:var(--bg3)}
+.panel-title{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;color:var(--green)}
+#opp-list{padding:8px;display:flex;flex-direction:column;gap:5px;min-height:200px}
+.opp-empty{padding:40px;text-align:center;color:var(--text3);font-size:10px}
+.opp-empty .big{font-family:'Rajdhani',sans-serif;font-size:28px;color:var(--border2);display:block;margin-bottom:6px}
+.opp{border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;background:var(--bg3);position:relative;overflow:hidden;cursor:pointer;transition:.2s}
+.opp:hover{border-color:var(--border2)}
+.opp::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.opp.safe::before{background:var(--green)}
+.opp.med::before{background:var(--yellow)}
+.opp.risky::before{background:var(--red)}
+.opp.safe{border-color:rgba(0,255,136,.15)}
+.opp.med{border-color:rgba(245,200,66,.15)}
+.opp.risky{border-color:rgba(255,68,102,.15)}
+.opp.NEW{animation:newOpp .4s ease}
+@keyframes newOpp{0%{transform:scaleX(.97);opacity:.5}100%{transform:scaleX(1);opacity:1}}
+.opp-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.opp-coin{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:var(--text)}
+.opp-route{display:grid;grid-template-columns:1fr auto 1fr;gap:5px;align-items:center;margin-bottom:7px}
+.opp-ex{padding:5px 8px;border-radius:3px;text-align:center}
+.opp-ex .ex-action{font-size:7px;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;opacity:.7}
+.opp-ex .ex-name{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700}
+.opp-ex .ex-price{font-size:8px;color:var(--text2);margin-top:1px}
+.opp-ex.buy{background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.2)}
+.opp-ex.sell{background:rgba(255,68,102,.06);border:1px solid rgba(255,68,102,.2)}
+.opp-meta{display:flex;justify-content:space-between;font-size:7px;color:var(--text3);padding-top:6px;border-top:1px solid var(--border)}
+.opp-profit.pos{color:var(--green);font-size:8px;font-weight:700}
+.opp-profit.neg{color:var(--red);font-size:8px;font-weight:700}
+#instr-panel{display:flex;flex-direction:column;gap:8px}
+.instr-empty{padding:30px 20px;text-align:center;color:var(--text3);font-size:9px}
+#selected-opp{display:none}
+#selected-opp.show{display:block}
+.instr-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.instr-hdr{padding:8px 12px;background:var(--bg3);border-bottom:1px solid var(--border);font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--green);letter-spacing:1px}
+.instr-body{padding:12px}
+.step{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start}
+.step:last-child{margin-bottom:0}
+.step-num{width:22px;height:22px;border-radius:50%;border:1px solid var(--green);color:var(--green);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-content .step-title{font-size:9px;font-weight:700;color:var(--text);margin-bottom:3px}
+.step-content .step-detail{font-size:8px;color:var(--text2);line-height:1.6}
+.step-content .step-val{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--yellow);margin-top:2px;line-height:1.5}
+.step-content .step-link{color:var(--blue);text-decoration:none;font-size:7px;padding:2px 6px;border:1px solid rgba(77,166,255,.3);border-radius:2px;display:inline-block;margin-top:3px}
+.step-content .step-link:hover{background:var(--blue2)}
+.alert-box{padding:8px 10px;border-radius:3px;font-size:8px;line-height:1.7;margin-top:6px}
+.alert-box.warn{background:rgba(245,200,66,.1);border:1px solid rgba(245,200,66,.3);color:var(--yellow)}
+.alert-box.info{background:var(--blue2);border:1px solid rgba(77,166,255,.3);color:var(--blue)}
+.alert-box.danger{background:var(--red2);border:1px solid rgba(255,68,102,.3);color:var(--red)}
+#ex-status{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:4px;padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r)}
+.ex-dot{padding:4px 5px;text-align:center;border-radius:3px;border:1px solid var(--border);font-size:6.5px;color:var(--text3);transition:.3s;position:relative;line-height:1.6}
+.ex-dot .ex-mode{font-size:5px;opacity:.5;display:block}
+.ex-dot.live{border-color:rgba(0,255,136,.3);color:var(--green);background:var(--green3)}
+.ex-dot.live .ex-mode{opacity:.7}
+.ex-dot.error{border-color:rgba(255,68,102,.15);color:#553344}
+#loglist{max-height:160px;overflow-y:auto;padding:6px 10px;display:flex;flex-direction:column-reverse;gap:2px}
+.log-e{font-size:7px;padding:1px 4px;border-left:2px solid var(--border);color:var(--text3)}
+.log-e.ok{border-color:var(--green);color:rgba(0,255,136,.7)}
+.log-e.warn{border-color:var(--yellow);color:rgba(245,200,66,.7)}
+.log-e.fail{border-color:var(--red);color:rgba(255,68,102,.7)}
+.log-e.info{border-color:var(--blue);color:rgba(77,166,255,.7)}
+.cmp-table{width:100%;border-collapse:collapse;font-size:8px;margin-top:4px}
+.cmp-table th{text-align:left;color:var(--text3);padding:3px 5px;border-bottom:1px solid var(--border);font-weight:400}
+.cmp-table td{padding:4px 5px;border-bottom:1px solid rgba(14,31,53,.5)}
+.cmp-table tr.best td{background:rgba(0,255,136,.04)}
+.quick-link{display:block;padding:5px 8px;margin-bottom:3px;border:1px solid var(--border);border-radius:3px;color:var(--text);text-decoration:none;font-size:9px;transition:.2s}
+.quick-link:hover{border-color:var(--blue);background:var(--blue2)}
+.quick-link .ql-name{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700}
+.quick-link .ql-url{color:var(--text3);font-size:6.5px}
+.refresh-btn{margin-left:auto;padding:2px 8px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--text3);font-size:7px;cursor:pointer;font-family:inherit}
+.refresh-btn:hover{border-color:var(--green);color:var(--green)}
+#sound-btn{padding:3px 8px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--text3);font-size:8px;cursor:pointer;font-family:inherit}
+#sound-btn.on{border-color:var(--green);color:var(--green)}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* ── TICKER BAR ── */
+#ticker-wrap{
+  width:100%;overflow:hidden;background:var(--bg2);
+  border:1px solid var(--border2);border-radius:var(--r);
+  margin-bottom:8px;padding:0;height:32px;position:relative;
+  display:none; /* hidden until scan starts */
+}
+#ticker-wrap.active{display:block;}
+#ticker-wrap::before,#ticker-wrap::after{
+  content:'';position:absolute;top:0;bottom:0;width:40px;z-index:2;pointer-events:none;
+}
+#ticker-wrap::before{left:0;background:linear-gradient(90deg,var(--bg2),transparent);}
+#ticker-wrap::after{right:0;background:linear-gradient(-90deg,var(--bg2),transparent);}
+#ticker-track{
+  display:flex;align-items:center;gap:0;
+  height:32px;white-space:nowrap;
+  animation:ticker-scroll 60s linear infinite;
+  will-change:transform;
+}
+#ticker-track:hover{animation-play-state:paused;}
+@keyframes ticker-scroll{
+  0%{transform:translateX(0);}
+  100%{transform:translateX(-50%);}
+}
+.t-item{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:0 14px;height:32px;cursor:pointer;
+  border-right:1px solid var(--border);
+  transition:background .15s;flex-shrink:0;
+}
+.t-item:hover{background:rgba(0,255,136,.06);}
+.t-item.safe .t-spread{color:var(--green);text-shadow:0 0 8px rgba(0,255,136,.5);}
+.t-item.med .t-spread{color:var(--yellow);}
+.t-item.risky .t-spread{color:var(--red);}
+.t-coin{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:#fff;}
+.t-route{font-size:7px;color:var(--text3);}
+.t-spread{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;}
+.t-profit{font-size:7px;color:var(--text2);}
+.t-badge{font-size:6px;padding:1px 4px;border-radius:3px;background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.2);}
+.t-sep{color:var(--border2);font-size:18px;padding:0 4px;user-select:none;}
+#ticker-label{
+  position:absolute;left:8px;top:50%;transform:translateY(-50%);
+  font-size:7px;color:var(--text3);letter-spacing:1px;z-index:3;
+  background:var(--bg2);padding:0 6px;
+}
+#ticker-empty{
+  display:flex;align-items:center;justify-content:center;
+  height:32px;font-size:8px;color:var(--text3);letter-spacing:1px;
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="header">
+  <div>
+    <div class="logo-text">▲ ARB<span style="color:#fff;opacity:.4">BOT</span> MANUAL</div>
+    <div class="logo-sub">SCANNER ARB · EXECUȚIE MANUALĂ · ZERO API · 11 EXCHANGE · 0.5s</div>
+  </div>
+  <div class="status-pill"><div class="sdot idle" id="sdot"></div><span id="stxt" style="color:var(--text3)">idle</span></div>
+  <div class="status-pill"><span id="lupd" style="font-size:7px;color:var(--text3)">—</span></div>
+  <button id="sound-btn" onclick="toggleSound()">🔇</button>
+  <button id="btn-start">▶ START SCAN</button>
+</div>
+
+<div id="stats">
+  <div class="stat-card"><div class="stat-lbl">OPORTUNITĂȚI</div><div class="stat-val yellow" id="s-opps">0</div></div>
+  <div class="stat-card"><div class="stat-lbl">SCANS</div><div class="stat-val blue" id="s-scans">0</div></div>
+  <div class="stat-card"><div class="stat-lbl">BEST SPREAD</div><div class="stat-val green" id="s-best">—</div></div>
+  <div class="stat-card"><div class="stat-lbl">LATENȚĂ AVG</div><div class="stat-val" id="s-lat">—</div></div>
+  <div class="stat-card"><div class="stat-lbl">EXCHANGE LIVE</div><div class="stat-val green" id="s-ex">0 / 13</div></div>
+  <div class="stat-card"><div class="stat-lbl">INTERVAL SCAN</div><div class="stat-val yellow" id="s-speed">0.5s</div></div>
+</div>
+
+<div id="speed-bar">
+  <span style="color:var(--text3);font-size:8px">VITEZĂ:</span>
+  <button class="spd active" data-ms="500">0.5s</button>
+  <button class="spd" data-ms="1000">1s</button>
+  <button class="spd" data-ms="2000">2s</button>
+  <button class="spd" data-ms="5000">5s</button>
+  <span class="sep">│</span>
+  <span style="color:var(--text3);font-size:8px">MIN SPREAD:</span>
+  <button class="spd active" data-spr="0.1">0.1%</button>
+  <button class="spd" data-spr="0.2">0.2%</button>
+  <button class="spd" data-spr="0.3">0.3%</button>
+  <button class="spd" data-spr="0.5">0.5%</button>
+  <span class="sep">│</span>
+  <span style="color:var(--text3);font-size:8px">QUOTE:</span>
+  <button class="qfilt on" data-q="USDT">USDT</button>
+  <button class="qfilt on" data-q="USDC">USDC</button>
+  <button class="qfilt" data-q="USD">USD</button>
+  <button class="qfilt" data-q="EUR">EUR</button>
+  <span class="sep">│</span>
+  <span style="color:var(--text3);font-size:8px">SIZE: $<span id="size-lbl">100</span></span>
+  <input type="range" id="size-r" min="10" max="5000" step="10" value="100"
+    style="width:80px;accent-color:var(--green);vertical-align:middle"
+    oninput="document.getElementById('size-lbl').textContent=this.value;TRADE_SIZE=+this.value">
+</div>
+
+<div id="ticker-wrap">
+  <span id="ticker-label">◈ LIVE ARB</span>
+  <div id="ticker-track"><div id="ticker-empty">— Pornește scannerul pentru a vedea oportunități în timp real —</div></div>
+</div>
+
+<div id="main">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div class="panel">
+      <div class="panel-hdr">
+        <div class="panel-title">▲ OPORTUNITĂȚI ARB LIVE</div>
+        <span style="font-size:7px;padding:2px 6px;border-radius:10px;border:1px solid rgba(0,255,136,.3);color:var(--green);background:var(--green3)" id="opp-count">0 găsite</span>
+        <span style="font-size:7px;color:var(--text3);margin-left:auto">Click pe card → instrucțiuni pas cu pas</span>
+      </div>
+      <div id="opp-list">
+        <div class="opp-empty" id="opp-empty"><span class="big">◎</span>Apasă START SCAN pentru a căuta oportunități...</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:7px;color:var(--text3);margin-bottom:4px;padding:0 2px">STATUS 11 EXCHANGE-URI · WS = WebSocket live · REST = polling</div>
+      <div id="ex-status"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr">
+        <div class="panel-title" style="font-size:11px">📋 LOG</div>
+        <button class="refresh-btn" onclick="document.getElementById('loglist').innerHTML=''">CLR</button>
+      </div>
+      <div id="loglist"></div>
+    </div>
+  </div>
+
+  <div id="instr-panel">
+    <div class="instr-card" id="instr-placeholder">
+      <div class="instr-hdr">📋 INSTRUCȚIUNI EXECUȚIE</div>
+      <div class="instr-empty"><div style="font-size:28px;margin-bottom:8px;color:var(--border2)">👆</div>Selectează o oportunitate<br>pentru instrucțiuni pas cu pas</div>
+    </div>
+    <div class="instr-card" id="selected-opp">
+      <div class="instr-hdr" id="sel-title">—</div>
+      <div class="instr-body">
+        <div class="step"><div class="step-num">1</div><div class="step-content"><div class="step-title">DESCHIDE EXCHANGE-UL DE CUMPĂRARE</div><div class="step-detail" id="step1-detail">—</div><a href="#" class="step-link" id="step1-link" target="_blank">→ Deschide</a></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content"><div class="step-title">CUMPĂRĂ (MARKET BUY)</div><div class="step-detail" id="step2-detail">—</div><div class="step-val" id="step2-val">—</div></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content"><div class="step-title">DESCHIDE EXCHANGE-UL DE VÂNZARE</div><div class="step-detail" id="step3-detail">—</div><a href="#" class="step-link" id="step3-link" target="_blank">→ Deschide</a></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-content"><div class="step-title">VINDE (MARKET SELL)</div><div class="step-detail" id="step4-detail">—</div><div class="step-val" id="step4-val">—</div></div></div>
+        <div id="instr-alert" class="alert-box info">—</div>
+        <div style="margin-top:10px">
+          <div style="font-size:8px;color:var(--text3);margin-bottom:4px">PREȚURI PE TOATE EXCHANGE-URILE</div>
+          <table class="cmp-table"><thead><tr><th>Exchange</th><th>BID</th><th>ASK</th></tr></thead><tbody id="cmp-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="instr-card">
+      <div class="instr-hdr" style="color:var(--yellow);font-size:11px">⚠ RISCURI & SFATURI</div>
+      <div class="instr-body" style="font-size:8px;color:var(--text2);line-height:2">
+        <div>▸ <b style="color:var(--text)">La 0.5s</b> — acționează imediat, prețul expiră rapid</div>
+        <div>▸ <b style="color:var(--text)">Spread &gt; 0.3%</b> = realist pentru execuție manuală</div>
+        <div>▸ <b style="color:var(--text)">Fonduri pe AMBELE exchange-uri</b> înainte de start</div>
+        <div>▸ <b style="color:var(--text)">Taxele taker</b> sunt scăzute din profit</div>
+        <div>▸ <b style="color:var(--text)">Verifică prețul live</b> pe exchange chiar înainte de plasare</div>
+      </div>
+    </div>
+    <div class="instr-card">
+      <div class="instr-hdr" style="font-size:11px">🔗 LINKURI RAPIDE</div>
+      <div class="instr-body" style="padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px">
+        <a class="quick-link" href="https://www.binance.com/en/trade" target="_blank"><div class="ql-name" style="color:#F0B90B">Binance</div><div class="ql-url">binance.com/trade</div></a>
+        <a class="quick-link" href="https://www.bybit.com/en/trade" target="_blank"><div class="ql-name" style="color:#F7A600">Bybit</div><div class="ql-url">bybit.com/trade</div></a>
+        <a class="quick-link" href="https://www.okx.com/trade-spot" target="_blank"><div class="ql-name" style="color:#7B61FF">OKX</div><div class="ql-url">okx.com/trade-spot</div></a>
+        <a class="quick-link" href="https://pro.coinbase.com" target="_blank"><div class="ql-name" style="color:#0052FF">Coinbase</div><div class="ql-url">pro.coinbase.com</div></a>
+        <a class="quick-link" href="https://www.kucoin.com/trade" target="_blank"><div class="ql-name" style="color:#23AF91">KuCoin</div><div class="ql-url">kucoin.com/trade</div></a>
+        <a class="quick-link" href="https://www.mexc.com/exchange" target="_blank"><div class="ql-name" style="color:#00C087">MEXC</div><div class="ql-url">mexc.com/exchange</div></a>
+        <a class="quick-link" href="https://www.gate.io/trade" target="_blank"><div class="ql-name" style="color:#E76E28">Gate.io</div><div class="ql-url">gate.io/trade</div></a>
+        <a class="quick-link" href="https://www.bitget.com/spot" target="_blank"><div class="ql-name" style="color:#00CED1">Bitget</div><div class="ql-url">bitget.com/spot</div></a>
+        <a class="quick-link" href="https://crypto.com/exchange/trade" target="_blank"><div class="ql-name" style="color:#1199FA">Crypto.com</div><div class="ql-url">crypto.com/exchange</div></a>
+        <a class="quick-link" href="https://bingx.com/en/spot" target="_blank"><div class="ql-name" style="color:#1DA462">BingX</div><div class="ql-url">bingx.com/spot</div></a>
+        <a class="quick-link" href="https://pro.kraken.com" target="_blank"><div class="ql-name" style="color:#5741D9">Kraken</div><div class="ql-url">pro.kraken.com</div></a>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+'use strict';
+var TRADE_SIZE=100, MIN_SPREAD=0.10, SCAN_INTERVAL=500, SOUND_ON=false;
+var ACTIVE_QUOTES={USDT:true,USDC:true,USD:false,EUR:false};
+
+var EX={
+  binance:  {n:'Binance',    c:'#F0B90B',ws:true, url:'https://www.binance.com/en/trade/{COIN}_{QUOTE}'},
+  bybit:    {n:'Bybit',      c:'#F7A600',ws:true, url:'https://www.bybit.com/en/trade/spot/{COIN}/{QUOTE}'},
+  okx:      {n:'OKX',        c:'#7B61FF',ws:true, url:'https://www.okx.com/trade-spot/{coin}-{quote}'},
+  kraken:   {n:'Kraken',     c:'#5741D9',ws:true, url:'https://pro.kraken.com/app/trade/{coin}-{quote}'},
+  coinbase: {n:'Coinbase',   c:'#0052FF',ws:true, url:'https://pro.coinbase.com/trade/{COIN}-{QUOTE}'},
+  kucoin:   {n:'KuCoin',     c:'#23AF91',ws:true, url:'https://www.kucoin.com/trade/{COIN}-{QUOTE}'},
+  gate:     {n:'Gate.io',    c:'#E76E28',ws:true, url:'https://www.gate.io/trade/{COIN}_{QUOTE}'},
+  mexc:     {n:'MEXC',       c:'#00C087',ws:true, url:'https://www.mexc.com/exchange/{COIN}_{QUOTE}'},
+  bingx:    {n:'BingX',      c:'#1DA462',ws:true, url:'https://bingx.com/en/spot/{COIN}-{QUOTE}/'},
+  cryptocom:{n:'Crypto.com', c:'#1199FA',ws:true, url:'https://crypto.com/exchange/trade/{coin}_{quote}'},
+  bitget:   {n:'Bitget',     c:'#00CED1',ws:false,url:'https://www.bitget.com/spot/{COIN}{QUOTE}'},
+};
+var EXK=Object.keys(EX);
+var TAKER={binance:.001,mexc:.001,bybit:.001,okx:.001,kraken:.0026,coinbase:.006,kucoin:.001,bitget:.001,bingx:.001,gate:.002,cryptocom:.002};
+
+// Minimum BID liquidity (USD) required for an exchange to be valid as SELL side
+// Minimum ASK liquidity (USD) required for an exchange to be valid as BUY side
+// Exchanges with lower real volume get higher minimums to filter noise
+var MIN_LIQ_SELL = {
+  binance:  50,   // high volume, low threshold
+  bybit:    50,
+  okx:      50,
+  mexc:     30,
+  gate:     30,
+  kucoin:   30,
+  bingx:    20,
+  bitget:   20,
+  coinbase: 200,  // excluded anyway but high threshold
+  kraken:   200,  // excluded anyway
+  cryptocom:500,  // excluded anyway but very high - they often have fake/stale prices
+};
+var MIN_LIQ_BUY = {
+  binance:  50,
+  bybit:    50,
+  okx:      50,
+  mexc:     30,
+  gate:     30,
+  kucoin:   30,
+  bingx:    20,
+  bitget:   20,
+  coinbase: 200,
+  kraken:   200,
+  cryptocom:500,
+};
+// Exchange-uri excluse din calcul arb (taxe prea mari sau volum mic)
+var ARB_EXCLUDED={coinbase:true,kraken:true,cryptocom:true}; // crypto.com: volum real mic pe altcoins
+
+// Coins with KNOWN network fragmentation across exchanges
+// (different chains = withdrawal impossible or costs more than profit)
+// Format: coin -> { exchange: 'CHAIN', ... }
+// If two exchanges don't share a common cheap network -> flag as NETWORK_MISMATCH
+var KNOWN_NETWORKS = {
+  // Binance restricts these to ETH only (expensive!) while others support BASE/SOL/cheaper chains
+  'FUN':    {binance:'ETH', bitget:'BASE', mexc:'ETH'},
+  'ACH':    {binance:'ETH', bybit:'ETH'},
+  'BOSON':  {binance:'ETH', bybit:'ETH'},
+  // Solana-native tokens (only work on Solana network)
+  'RAY':    {binance:'SOL', bybit:'SOL', okx:'SOL'},
+  'JTO':    {binance:'SOL', bybit:'SOL', okx:'SOL'},
+  'JUP':    {binance:'SOL', bybit:'SOL', okx:'SOL'},
+  'BONK':   {binance:'SOL', bybit:'SOL', okx:'SOL'},
+  'WIF':    {binance:'SOL', bybit:'SOL', okx:'SOL'},
+  'BOME':   {binance:'SOL', bybit:'SOL', okx:'SOL'},
+  'MYRO':   {binance:'SOL', bybit:'SOL'},
+  'SAMO':   {binance:'SOL', bybit:'SOL'},
+  'ORCA':   {binance:'SOL', bybit:'SOL', okx:'SOL'},
+  'PYTH':   {binance:'SOL', bybit:'SOL', okx:'SOL'},
+  'POPCAT': {binance:'SOL', bybit:'SOL', okx:'SOL'},
+  'SLERF':  {binance:'SOL', bybit:'SOL'},
+  'PNUT':   {binance:'SOL', bybit:'SOL', okx:'SOL'},
+  'PENGU':  {binance:'SOL', bybit:'SOL', okx:'SOL'},
+  // Tokens where withdrawal network is expensive (ETH only, high fees)
+  // These can still work if spread is large enough to cover ~$15-30 ETH gas
+  // We'll warn but not filter - user decides
+};
+
+// Minimum spread to cover ETH gas fees (assuming ~$15 avg gas cost)
+// At $100 trade size = need 15% spread just to break even on gas!
+// At $1000 trade size = need 1.5%
+function getNetworkWarning(coin, buyEx, sellEx) {
+  var networks = KNOWN_NETWORKS[coin];
+  if (!networks) return null;
+  var buyNet = networks[buyEx];
+  var sellNet = networks[sellEx];
+  if (!buyNet || !sellNet) return null;
+  if (buyNet === sellNet) return null; // same network = OK
+  // Different networks = need bridge or different withdrawal
+  return {
+    warning: true,
+    buyNetwork: buyNet,
+    sellNetwork: sellNet,
+    msg: 'REȚELE DIFERITE: ' + buyEx.toUpperCase() + ' folosește ' + buyNet + ', ' + sellEx.toUpperCase() + ' folosește ' + sellNet + '. Transfer direct imposibil!'
+  };
+}
+var COINS=['1INCH', 'AAVE', 'ACA', 'ACE', 'ACH', 'ACM', 'ACMN', 'ACS', 'ACT', 'ADA', 'ADX', 'AERGO', 'AERO', 'AEVO', 'AGI', 'AGIX', 'AGLD', 'AI16Z', 'AION', 'AIOZ', 'AIRL', 'AKRO', 'AKT', 'ALGO', 'ALICE', 'ALLO', 'ALN', 'ALPACA', 'ALPHA', 'ALPINE', 'ALPS', 'ALT', 'AMB', 'AMP', 'AMPL', 'ANKR', 'ANT', 'APE', 'API3', 'APT', 'AR', 'ARB', 'ARDR', 'ARIS', 'ARK', 'ARKM', 'ARPA', 'ASM', 'ASR', 'AST', 'ASTR', 'ASTRO', 'ATA', 'ATH', 'ATLAS', 'ATM', 'ATOM', 'AUDIO', 'AUDIUS', 'AURA', 'AVA', 'AVAX', 'AVNT', 'AXL', 'AXS', 'AZERO', 'BABY', 'BADGER', 'BAKE', 'BAL', 'BAND', 'BAR', 'BAT', 'BCH', 'BEAM', 'BEL', 'BERA', 'BETA', 'BGB', 'BICO', 'BIO', 'BLAST', 'BLD', 'BLUR', 'BLZ', 'BNB', 'BNT', 'BNX', 'BOBA', 'BOME', 'BOND', 'BONDLY', 'BONK', 'BORA', 'BOSON', 'BRD', 'BRZ', 'BSW', 'BTC', 'BTG', 'BTS', 'BTT', 'BURGER', 'C98', 'CAKE', 'CATI', 'CELO', 'CELR', 'CFG', 'CFX', 'CGPT', 'CHESS', 'CHR', 'CHZ', 'CITY', 'CKB', 'CLV', 'CMC', 'COCOS', 'COMBO', 'COMP', 'CONV', 'COTI', 'COW', 'CREAM', 'CRO', 'CRU', 'CRV', 'CTK', 'CTSI', 'CTXC', 'CUDOS', 'CVC', 'CVX', 'CWS', 'CYBER', 'DAO', 'DAR', 'DASH', 'DATA', 'DCR', 'DEEP', 'DEGEN', 'DEGO', 'DENT', 'DEP', 'DERC', 'DEXE', 'DF', 'DGB', 'DIA', 'DIGG', 'DNA', 'DNT', 'DOCK', 'DODO', 'DOGE', 'DOT', 'DPR', 'DREP', 'DSLA', 'DUSK', 'DVPN', 'DYDX', 'DYM', 'EDU', 'EGLD', 'EIGEN', 'ELF', 'ENA', 'ENJ', 'ENS', 'EPAN', 'EPS', 'EPX', 'ERG', 'ERN', 'ETC', 'ETH', 'ETHFI', 'EULER', 'EVA', 'EVER', 'EVMOS', 'EWT', 'FARM', 'FARTCOIN', 'FET', 'FEVR', 'FIDA', 'FIL', 'FIS', 'FLM', 'FLOKI', 'FLOW', 'FLT', 'FNB', 'FOAM', 'FOR', 'FOX', 'FRONT', 'FRXETH', 'FTM', 'FTN', 'FUEL', 'FXS', 'GAFI', 'GALA', 'GARI', 'GHST', 'GLM', 'GLMR', 'GMX', 'GNO', 'GNS', 'GNX', 'GOAT', 'GODS', 'GRT', 'GST', 'GT', 'GUILD', 'HAI', 'HAKA', 'HARD', 'HBAR', 'HEC', 'HEGIC', 'HELMET', 'HFT', 'HIFI', 'HIGH', 'HIVE', 'HNT', 'HOT', 'HT', 'HXRO', 'HYDRA', 'HYPE', 'HYPER', 'IBT', 'ICP', 'ICX', 'IGU', 'ILV', 'IMX', 'INA', 'INDEX', 'INIT', 'INJ', 'INTER', 'INTR', 'IO', 'IOTA', 'IOTX', 'IQ', 'IRIS', 'IXS', 'JAM', 'JASMY', 'JONES', 'JST', 'JTO', 'JUNO', 'JUP', 'JUV', 'KAITO', 'KALM', 'KAR', 'KARMA', 'KAS', 'KASTA', 'KAVA', 'KCS', 'KEY', 'KIN', 'KINT', 'KITE', 'KLAY', 'KLIMA', 'KMON', 'KOBE', 'KOGE', 'KRL', 'KSM', 'KUB', 'KUJI', 'KWENTA', 'LA', 'LAT', 'LAZIO', 'LBC', 'LBR', 'LCX', 'LDO', 'LEAD', 'LEVER', 'LINA', 'LINK', 'LISTA', 'LIT', 'LOKA', 'LOOKS', 'LPT', 'LQTY', 'LRC', 'LSK', 'LTC', 'LTO', 'LYRA', 'MAGIC', 'MANA', 'MANGO', 'MANTA', 'MAPLE', 'MARS', 'MASK', 'MATIC', 'MAV', 'MAVIA', 'MBL', 'MBOX', 'MC', 'MCB', 'MCO', 'MDT', 'MDX', 'MEDIA', 'MEME', 'MERLIN', 'METIS', 'MEW', 'MIM', 'MINA', 'MITH', 'MKR', 'MOCA', 'MOD', 'MODA', 'MODE', 'MON', 'MORPHO', 'MOVE', 'MOVR', 'MPH', 'MQL', 'MST', 'MTL', 'MUU', 'MV', 'MX', 'MXC', 'MYRO', 'MYST', 'NANO', 'NAOS', 'NAVI', 'NCT', 'NEAR', 'NEIRO', 'NEO', 'NEON', 'NEST', 'NEXO', 'NFD', 'NFT', 'NFTX', 'NGL', 'NGM', 'NIM', 'NKN', 'NMKR', 'NMR', 'NOIA', 'NOM', 'NOT', 'NOVA', 'NPT', 'NULS', 'NUT', 'O3', 'OCEAN', 'OCN', 'OCTA', 'OG', 'OGN', 'OHM', 'OKB', 'OLT', 'OM', 'OMNI', 'ONDO', 'ONE', 'ONT', 'ONX', 'OP', 'OPUL', 'ORAI', 'ORCA', 'ORDI', 'ORN', 'OSMO', 'OVR', 'OXT', 'PAL', 'PARA', 'PAY', 'PDEX', 'PENDLE', 'PENGU', 'PEOPLE', 'PEPE', 'PERP', 'PHA', 'PHTR', 'PICA', 'PIX', 'PIXEL', 'PIXELS', 'PKF', 'PLT', 'PNK', 'PNP', 'PNUT', 'POL', 'POLIS', 'POLK', 'POLS', 'POLX', 'POLY', 'POND', 'POPCAT', 'PORTAL', 'PORTO', 'POWR', 'PPT', 'PREMIA', 'PRIME', 'PROM', 'PROS', 'PROVE', 'PSG', 'PUSH', 'PYR', 'PYTH', 'QI', 'QSP', 'QTUM', 'QUICK', 'RAI', 'RALLY', 'RARE', 'RAY', 'RDNT', 'RED', 'REEF', 'REGEN', 'RELAY', 'REN', 'RENDER', 'REVV', 'REZ', 'RFOX', 'RGP', 'RIA', 'RLC', 'RLY', 'RMRK', 'ROBO', 'ROCKI', 'ROSE', 'ROUTE', 'RPL', 'RUBIC', 'RUNE', 'RVF', 'RVN', 'SAFE', 'SAGA', 'SAKE', 'SAMO', 'SAND', 'SANTOS', 'SAROS', 'SC', 'SCROLL', 'SCRT', 'SDL', 'SEI', 'SEND', 'SFP', 'SFUND', 'SHIB', 'SHR', 'SIA', 'SIGN', 'SKILL', 'SKL', 'SLERF', 'SLIM', 'SLP', 'SLRS', 'SNC', 'SNFT', 'SNOW', 'SNX', 'SOFI', 'SOI', 'SOL', 'SOUL', 'SPARTA', 'SPELL', 'SPK', 'SPS', 'SRK', 'SRM', 'STAFI', 'STAKE', 'STARL', 'STARS', 'STETH', 'STMX', 'STORJ', 'STPT', 'STRD', 'STRK', 'STRONG', 'STRP', 'STX', 'SUB', 'SUI', 'SUKU', 'SUN', 'SUPER', 'SURV', 'SUSHI', 'SUTER', 'SWEAT', 'SWINGBY', 'SWISE', 'SXP', 'SYLO', 'SYMM', 'SYN', 'SYNTHR', 'SYS', 'TAIKO', 'TAO', 'TBTC', 'TCG', 'TCT', 'TEER', 'TELOS', 'TENSET', 'TFUEL', 'THETA', 'TIA', 'TIME', 'TKING', 'TKO', 'TLM', 'TLOS', 'TNSR', 'TOKO', 'TOMO', 'TON', 'TORN', 'TOSHI', 'TOWER', 'TPT', 'TRAC', 'TRAVA', 'TRB', 'TRIAS', 'TRIBE', 'TRIG', 'TROY', 'TRU', 'TRUMP', 'TRVL', 'TRX', 'TST', 'TTC', 'TURBO', 'TVK', 'TWT', 'UAH', 'UFARM', 'UFT', 'ULTRA', 'UMA', 'UNFI', 'UNI', 'UNIBOT', 'USUAL', 'UTK', 'UXLINK', 'VALUE', 'VEED', 'VELO', 'VEMP', 'VERSE', 'VET', 'VIBE', 'VIDT', 'VIRTUAL', 'VITE', 'VLX', 'VOXEL', 'VRA', 'W', 'WAL', 'WAN', 'WAVES', 'WAXP', 'WEMIX', 'WET', 'WIF', 'WIN', 'WING', 'WINK', 'WIS', 'WIZARD', 'WLD', 'WOM', 'WOMBAT', 'WRX', 'XCAD', 'XDAO', 'XDEFI', 'XED', 'XEM', 'XFT', 'XGT', 'XLM', 'XMR', 'XNL', 'XNO', 'XPR', 'XPRT', 'XRP', 'XTZ', 'XVG', 'YAM', 'YETI', 'YFI', 'YGG', 'YLD', 'ZCX', 'ZEC', 'ZEE', 'ZEN', 'ZETA', 'ZFI', 'ZIL', 'ZIRCUIT', 'ZK', 'ZKML', 'ZONE', 'ZORA', 'ZRO', 'ZTX'];
+
+var S={running:false,timer:null,scanCount:0,prices:{},latency:{},results:[],selectedArb:null};
+var WS_PRICES={}, WS_CONNS={};
+var CB={fails:{},times:{},T:4,C:45000,
+  fail:function(k){this.fails[k]=(this.fails[k]||0)+1;if(this.fails[k]>=this.T)this.times[k]=Date.now();},
+  ok:function(k){this.fails[k]=0;delete this.times[k];},
+  isOpen:function(k){if(!this.times[k])return false;return(Date.now()-this.times[k])<this.C;}};
+
+function g(id){return document.getElementById(id);}
+function _safe(n){return n!=null&&isFinite(n)&&!isNaN(n);}
+function withTimeout(p,ms){return Promise.race([p,new Promise(function(_,r){setTimeout(function(){r(new Error('timeout'));},ms);})]);}
+function xlog(msg,type){
+  var el=g('loglist');if(!el)return;
+  var d=document.createElement('div');d.className='log-e '+(type||'info');
+  d.textContent='['+new Date().toTimeString().slice(0,8)+'] '+msg;
+  el.insertBefore(d,el.firstChild);
+  while(el.children.length>200)el.removeChild(el.lastChild);
+}
+function setStatus(st){
+  var dot=g('sdot'),txt=g('stxt');
+  if(dot)dot.className='sdot '+(st==='ok'?'ok':st==='scan'?'scan':'idle');
+  if(txt){txt.textContent=st==='ok'?'live':st==='scan'?'scanning...':'idle';
+    txt.style.color=st==='ok'?'var(--green)':st==='scan'?'var(--yellow)':'var(--text3)';}
+}
+
+// ════════════════════════════════════
+// WEBSOCKET FEEDS (10 exchanges)
+// ════════════════════════════════════
+function wsConnect(name,url,onOpen,onMsg,reconnectDelay){
+  var ws=new WebSocket(url);
+  WS_CONNS[name]=ws;
+  ws.onopen=function(){updateExDot(name,'live');if(onOpen)onOpen(ws);};
+  ws.onmessage=function(e){try{onMsg(JSON.parse(e.data));}catch(e2){}};
+  ws.onerror=function(){updateExDot(name,'error');};
+  ws.onclose=function(){updateExDot(name,'error');WS_CONNS[name]=null;
+    if(S.running)setTimeout(function(){wsConnect(name,url,onOpen,onMsg,reconnectDelay);},reconnectDelay||6000);};
+  return ws;
+}
+
+
+// ═══════════════════════════════════════════════════
+// AUTO-DISCOVERY: fetch coin lists from exchanges at startup
+// Merges with static COINS list for maximum coverage
+// ═══════════════════════════════════════════════════
+var COINS_LOADED = false;
+
+function discoverCoins(callback){
+  var bad = new Set([
+    'USDT','USDC','BUSD','TUSD','USDD','USDP','DAI','FRAX','LUSD','GUSD',
+    'WBTC','WETH','WBNB','STETH','RETH','CBETH','WDOGE','WETC',
+    'PAXG','XAUT','LUNC','USTC','UST','FTT','LUNA','BVND','IDRT','UAH',
+    'AGEUR','EURC','EURT','BKRW','BIDR'
+  ]);
+  var validCoin = function(c){ return /^[A-Z][A-Z0-9]{1,7}$/.test(c) && !bad.has(c); };
+  var discovered = new Set(COINS);
+  var done = 0, total = 3;
+  var finish = function(){
+    done++;
+    if(done>=total){
+      var prev = COINS.length;
+      COINS = Array.from(discovered).filter(validCoin).sort();
+      xlog('🔍 Auto-discovery: '+COINS.length+' monede (+'+(COINS.length-prev)+' noi)','ok');
+      COINS_LOADED = true;
+      callback();
+    }
+  };
+
+  // Binance
+  fetch('https://api.binance.com/api/v3/exchangeInfo')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      (d.symbols||[]).forEach(function(s){
+        if(s.status==='TRADING' && (s.quoteAsset==='USDT'||s.quoteAsset==='USDC'))
+          discovered.add(s.baseAsset);
+      });
+      finish();
+    }).catch(function(){ finish(); });
+
+  // Bybit
+  fetch('https://api.bybit.com/v5/market/instruments-info?category=spot&limit=1000')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      ((d.result||{}).list||[]).forEach(function(s){
+        if(s.status==='Trading' && (s.quoteCoin==='USDT'||s.quoteCoin==='USDC'))
+          discovered.add(s.baseCoin);
+      });
+      finish();
+    }).catch(function(){ finish(); });
+
+  // OKX
+  fetch('https://www.okx.com/api/v5/public/instruments?instType=SPOT')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      (d.data||[]).forEach(function(s){
+        if(s.state==='live' && (s.quoteCcy==='USDT'||s.quoteCcy==='USDC'))
+          discovered.add(s.baseCcy);
+      });
+      finish();
+    }).catch(function(){ finish(); });
+
+  // Gate.io (bonus - nu blochează CORS din browser)
+  fetch('https://api.gateio.ws/api/v4/spot/currency_pairs')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      (d||[]).forEach(function(s){
+        if(s.trade_status==='tradable' && (s.quote==='USDT'||s.quote==='USDC'))
+          discovered.add(s.base);
+      });
+    }).catch(function(){});
+
+  // MEXC
+  fetch('https://api.mexc.com/api/v3/exchangeInfo')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      (d.symbols||[]).forEach(function(s){
+        if(s.status==='ENABLED' && (s.quoteAsset==='USDT'||s.quoteAsset==='USDC'))
+          discovered.add(s.baseAsset);
+      });
+    }).catch(function(){});
+
+  // KuCoin
+  fetch('https://api.kucoin.com/api/v2/symbols')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      ((d.data)||[]).forEach(function(s){
+        if(s.enableTrading && (s.quoteCurrency==='USDT'||s.quoteCurrency==='USDC'))
+          discovered.add(s.baseCurrency);
+      });
+    }).catch(function(){});
+}
+
+function startWS_Binance(){
+  // Binance allows up to 1024 streams per connection; split COINS into chunks of 50
+  var allSubs=COINS.map(function(c){return c.toLowerCase()+'usdt@depth5@100ms';});
+  var chunks=[];for(var i=0;i<allSubs.length;i+=50)chunks.push(allSubs.slice(i,i+50));
+  chunks.forEach(function(chunk,ci){
+    wsConnect('binance'+(ci||''),'wss://stream.binance.com:9443/stream?streams='+chunk.join('/'),
+      function(){if(ci===0)xlog('WS Binance ✓ ('+COINS.length+' perechi)','ok');},
+      function(d){
+        if(!d.data)return;var t=d.data;
+        // depth5 stream: stream name = symbol@depth5@100ms
+        var stream=d.stream||'';
+        var s=stream.split('@')[0].toUpperCase();
+        var coin=null,quote=null;
+        if(s.endsWith('USDT')){coin=s.slice(0,-4);quote='USDT';}
+        else if(s.endsWith('USDC')){coin=s.slice(0,-4);quote='USDC';}
+        if(!coin||!COINS.includes(coin))return;
+        var bids=t.bids||[],asks=t.asks||[];
+        if(!bids.length||!asks.length)return;
+        var bid=+bids[0][0],bidQty=+bids[0][1];
+        var ask=+asks[0][0],askQty=+asks[0][1];
+        // Sum top-3 qty for liquidity check
+        var bidLiq=bids.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+        var askLiq=asks.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+        if(bid>0&&ask>0)WS_PRICES[coin+'_'+quote+'_binance']={bid:bid,ask:ask,bidQty:bidQty,askQty:askQty,bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'binance',ts:Date.now()};
+      },5000);
+  });
+}
+
+function startWS_Bybit(){
+  // Bybit supports up to 10 topics per message; send in batches
+  var allArgs=COINS.map(function(c){return 'orderbook.5.'+c+'USDT';});
+  wsConnect('bybit','wss://stream.bybit.com/v5/public/spot',
+    function(ws){
+      for(var i=0;i<allArgs.length;i+=10){
+        ws.send(JSON.stringify({op:'subscribe',args:allArgs.slice(i,i+10)}));
+      }
+      xlog('WS Bybit ✓ ('+COINS.length+' perechi)','ok');
+    },
+    function(d){
+      if(!d.topic||!d.data||!d.topic.startsWith('orderbook'))return;
+      var sym=d.topic.split('.')[2];
+      var coin=sym.replace('USDT','').replace('USDC',''),quote=sym.includes('USDC')?'USDC':'USDT';
+      var bids=d.data.b||[],asks=d.data.a||[];
+      var bid=+(bids[0]&&bids[0][0]||0),ask=+(asks[0]&&asks[0][0]||0);
+      var bidQty=+(bids[0]&&bids[0][1]||0),askQty=+(asks[0]&&asks[0][1]||0);
+      var bidLiq=bids.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+      var askLiq=asks.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+      if(bid>0&&ask>0&&COINS.indexOf(coin)>=0)WS_PRICES[coin+'_'+quote+'_bybit']={bid:bid,ask:ask,bidQty:bidQty,askQty:askQty,bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'bybit',ts:Date.now()};
+    },5000);
+}
+
+function startWS_OKX(){
+  // OKX: send all coins in batches of 30
+  var allArgs=COINS.map(function(c){return {channel:'books5',instId:c+'-USDT'};});
+  wsConnect('okx','wss://ws.okx.com:8443/ws/v5/public',
+    function(ws){
+      for(var i=0;i<allArgs.length;i+=30){
+        ws.send(JSON.stringify({op:'subscribe',args:allArgs.slice(i,i+30)}));
+      }
+      xlog('WS OKX ✓ ('+COINS.length+' perechi)','ok');
+    },
+    function(d){
+      if(!d.data||!d.data[0]||!d.arg||d.arg.channel!=='books5')return;
+      var t=d.data[0],parts=(d.arg.instId||'').split('-');if(parts.length<2)return;
+      var coin=parts[0],quote=parts[1];
+      var bids=t.bids||[],asks=t.asks||[];
+      var bid=+(bids[0]&&bids[0][0]||0),ask=+(asks[0]&&asks[0][0]||0);
+      var bidQty=+(bids[0]&&bids[0][1]||0),askQty=+(asks[0]&&asks[0][1]||0);
+      var bidLiq=bids.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+      var askLiq=asks.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+      if(bid>0&&ask>0&&COINS.indexOf(coin)>=0&&ACTIVE_QUOTES[quote])WS_PRICES[coin+'_'+quote+'_okx']={bid:bid,ask:ask,bidQty:bidQty,askQty:askQty,bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'okx',ts:Date.now()};
+    },8000);
+}
+
+function startWS_Coinbase(){
+  var pairs=['BTC-USD','ETH-USD','SOL-USD','XRP-USD','DOGE-USD','LTC-USD','LINK-USD','AVAX-USD','ADA-USD','BTC-USDC','ETH-USDC','SOL-USDC','XRP-USDC','DOGE-USDC','LTC-USDC'];
+  wsConnect('coinbase','wss://ws-feed.exchange.coinbase.com',
+    function(ws){ws.send(JSON.stringify({type:'subscribe',product_ids:pairs,channels:['ticker']}));xlog('WS Coinbase ✓','ok');},
+    function(d){
+      if(d.type!=='ticker'||!d.product_id||!d.best_bid)return;
+      var p=d.product_id.split('-');if(p.length<2)return;
+      var coin=p[0],quote=p[1],bid=+(d.best_bid||0),ask=+(d.best_ask||0);
+      if(bid>0&&ask>0&&COINS.indexOf(coin)>=0&&ACTIVE_QUOTES[quote])WS_PRICES[coin+'_'+quote+'_coinbase']={bid:bid,ask:ask,coin:coin,quote:quote,ex:'coinbase',ts:Date.now()};
+    },5000);
+}
+
+function startWS_Kraken(){
+  var pairs=['XBT/USD','ETH/USD','SOL/USD','XRP/USD','DOGE/USD','LTC/USD','LINK/USD','DOT/USD','ADA/USD','XBT/EUR','ETH/EUR'];
+  wsConnect('kraken','wss://ws.kraken.com',
+    function(ws){ws.send(JSON.stringify({event:'subscribe',pair:pairs,subscription:{name:'ticker'}}));xlog('WS Kraken ✓','ok');},
+    function(d){
+      if(!Array.isArray(d)||d.length<4||d[2]!=='ticker')return;
+      var t=d[1],pairStr=d[3];if(!t||!t.b||!t.a)return;
+      var parts=pairStr.split('/');if(parts.length<2)return;
+      var coin=parts[0]==='XBT'?'BTC':parts[0],quote=parts[1]==='USD'?'USD':'EUR';
+      var bid=+(t.b[0]||0),ask=+(t.a[0]||0);
+      if(bid>0&&ask>0&&ACTIVE_QUOTES[quote])WS_PRICES[coin+'_'+quote+'_kraken']={bid:bid,ask:ask,coin:coin,quote:quote,ex:'kraken',ts:Date.now()};
+    },8000);
+}
+
+function startWS_KuCoin(){
+  withTimeout(fetch('https://api.kucoin.com/api/v1/bullet-public',{method:'POST',cache:'no-store'}),8000)
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.code!=='200000'||!d.data)throw new Error('token fail');
+      var inst=d.data.instanceServers[0];
+      var wsUrl=inst.endpoint+'?token='+d.data.token+'&connectId=arb'+Date.now();
+      var ws=new WebSocket(wsUrl);WS_CONNS.kucoin=ws;
+      var pt=null;
+      ws.onopen=function(){
+        xlog('WS KuCoin ✓','ok');updateExDot('kucoin','live');
+        var syms=COINS.map(function(c){return c+'-USDT';});
+        ws.send(JSON.stringify({id:'1',type:'subscribe',topic:'/market/ticker:'+syms.join(','),privateChannel:false,response:true}));
+        pt=setInterval(function(){if(ws.readyState===1)ws.send(JSON.stringify({id:'p',type:'ping'}));},inst.pingInterval||18000);
+      };
+      ws.onmessage=function(e){
+        try{var d=JSON.parse(e.data);if(d.type==='pong'||d.type!=='message'||!d.data)return;
+          var t=d.data,parts=(d.subject||'').split('-');if(parts.length<2)return;
+          var coin=parts[0],quote=parts[1],bid=+(t.bestBid||0),ask=+(t.bestAsk||0);
+          if(bid>0&&ask>0&&COINS.indexOf(coin)>=0&&ACTIVE_QUOTES[quote])WS_PRICES[coin+'_'+quote+'_kucoin']={bid:bid,ask:ask,coin:coin,quote:quote,ex:'kucoin',ts:Date.now()};
+        }catch(e2){}
+      };
+      ws.onerror=function(){updateExDot('kucoin','error');if(pt)clearInterval(pt);};
+      ws.onclose=function(){updateExDot('kucoin','error');WS_CONNS.kucoin=null;if(pt)clearInterval(pt);
+        if(S.running)setTimeout(startWS_KuCoin,10000);};
+    }).catch(function(e){xlog('KuCoin: CORS blocat pe file:// - skip','warn');updateExDot('kucoin','error');CB.fail('kucoin');CB.fail('kucoin');CB.fail('kucoin');});
+}
+
+function startWS_Gate(){
+  var syms=COINS.map(function(c){return c+'_USDT';});
+  wsConnect('gate','wss://api.gateio.ws/ws/v4/',
+    function(ws){ws.send(JSON.stringify({time:Math.floor(Date.now()/1000),channel:'spot.order_book',event:'subscribe',payload:syms.map(function(s){return [s,'5','100ms'];})}));xlog('WS Gate.io ✓','ok');},
+    function(d){
+      if(d.channel!=='spot.order_book'||d.event!=='update'||!d.result)return;
+      var t=d.result,parts=(t.s||'').split('_');if(parts.length<2)return;
+      var coin=parts[0],quote=parts[1];
+      var bids=t.bids||[],asks=t.asks||[];
+      var bid=+(bids[0]&&bids[0][0]||0),ask=+(asks[0]&&asks[0][0]||0);
+      var bidQty=+(bids[0]&&bids[0][1]||0),askQty=+(asks[0]&&asks[0][1]||0);
+      var bidLiq=bids.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+      var askLiq=asks.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+      if(bid>0&&ask>0&&COINS.indexOf(coin)>=0&&ACTIVE_QUOTES[quote])WS_PRICES[coin+'_'+quote+'_gate']={bid:bid,ask:ask,bidQty:bidQty,askQty:askQty,bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'gate',ts:Date.now()};
+    },6000);
+}
+
+function startWS_MEXC(){
+  var coins=COINS.slice();
+  wsConnect('mexc','wss://wbs.mexc.com/ws',
+    function(ws){
+      xlog('WS MEXC ✓','ok');
+      coins.forEach(function(c){ws.send(JSON.stringify({method:'SUBSCRIPTION',params:['spot@public.limit.depth.v3.api@'+c+'USDT@5']}));});
+    },
+    function(d){
+      if(!d.d||!d.s)return;
+      var s=d.s,coin=null,quote=null;
+      if(s.endsWith('USDT')){coin=s.slice(0,-4);quote='USDT';}
+      else if(s.endsWith('USDC')){coin=s.slice(0,-4);quote='USDC';}
+      if(!coin||COINS.indexOf(coin)<0||!ACTIVE_QUOTES[quote])return;
+      // depth format: d.asks=[[price,qty],...], d.bids=[[price,qty],...]
+      var bids=d.d.bids||d.d.asks?d.d.bids:[]; // fallback
+      var asks_=d.d.asks||[];
+      var bid=+(bids&&bids[0]?bids[0][0]:d.d.b||0);
+      var ask=+(asks_&&asks_[0]?asks_[0][0]:d.d.a||0);
+      var bidQty=+(bids&&bids[0]?bids[0][1]:0);
+      var askQty=+(asks_&&asks_[0]?asks_[0][1]:0);
+      var bidLiq=bids?bids.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0):bid*bidQty;
+      var askLiq=asks_?asks_.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0):ask*askQty;
+      if(bid>0&&ask>0)WS_PRICES[coin+'_'+quote+'_mexc']={bid:bid,ask:ask,bidQty:bidQty,askQty:askQty,bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'mexc',ts:Date.now()};
+    },6000);
+}
+
+function startWS_BingX(){
+  var coins=COINS.slice();
+  wsConnect('bingx','wss://open-api-ws.bingx.com/market',
+    function(ws){
+      xlog('WS BingX ✓','ok');
+      coins.forEach(function(c){ws.send(JSON.stringify({id:c,reqType:'sub',dataType:c+'-USDT@bookTicker'}));});
+    },
+    function(d){
+      // BingX message parse
+      if(!d.data||!d.dataType)return;
+      var parts=(d.dataType||'').split('@')[0].split('-');if(parts.length<2)return;
+      var coin=parts[0],quote=parts[1],bid=+(d.data.bidPrice||0),ask=+(d.data.askPrice||0);
+      if(bid>0&&ask>0&&COINS.indexOf(coin)>=0&&ACTIVE_QUOTES[quote])WS_PRICES[coin+'_'+quote+'_bingx']={bid:bid,ask:ask,coin:coin,quote:quote,ex:'bingx',ts:Date.now()};
+    },7000);
+  // BingX sends gzip blobs — override onmessage to handle both
+  var _ws=WS_CONNS.bingx;
+  if(_ws){
+    _ws.onmessage=function(e){
+      var parse=function(txt){try{var d=JSON.parse(txt);if(!d.data||!d.dataType)return;var parts=(d.dataType||'').split('@')[0].split('-');if(parts.length<2)return;var coin=parts[0],quote=parts[1],bid=+(d.data.bidPrice||0),ask=+(d.data.askPrice||0);if(bid>0&&ask>0&&COINS.indexOf(coin)>=0&&ACTIVE_QUOTES[quote])WS_PRICES[coin+'_'+quote+'_bingx']={bid:bid,ask:ask,coin:coin,quote:quote,ex:'bingx',ts:Date.now()};}catch(e2){}};
+      var raw=e.data;
+      if(typeof raw==='string'){parse(raw);}
+      else if(raw instanceof Blob){raw.arrayBuffer().then(function(buf){try{var ds=new DecompressionStream('gzip');new Response(new Blob([buf]).stream().pipeThrough(ds)).text().then(parse).catch(function(){});}catch(e2){}}).catch(function(){});}
+    };
+  }
+}
+
+function startWS_CryptoCom(){
+  var coins=COINS.slice();
+  var pt=null;
+  wsConnect('cryptocom','wss://stream.crypto.com/exchange/v1/market',
+    function(ws){
+      var channels=coins.map(function(c){return 'ticker.'+c+'_USDT';});
+      // Send in batches of 30
+      for(var i=0;i<channels.length;i+=30){
+        ws.send(JSON.stringify({id:i+1,method:'subscribe',params:{channels:channels.slice(i,i+30)}}));
+      }
+      xlog('WS Crypto.com ✓ ('+coins.length+' perechi)','ok');
+      pt=setInterval(function(){if(ws.readyState===1)ws.send(JSON.stringify({id:0,method:'public/heartbeat'}));},25000);
+    },
+    function(d){
+      if(d.method==='public/heartbeat'){var ws=WS_CONNS.cryptocom;if(ws&&ws.readyState===1)ws.send(JSON.stringify({id:d.id,method:'public/respond-heartbeat'}));return;}
+      if(!d.result||!d.result.data)return;
+      var inst=d.result.instrument_name||'',parts=inst.split('_');if(parts.length<2)return;
+      var coin=parts[0],quote=parts[1];
+      d.result.data.forEach(function(t){
+        var bid=+(t.b||t.bid||0),ask=+(t.k||t.ask||0);
+        if(bid>0&&ask>0&&COINS.indexOf(coin)>=0&&ACTIVE_QUOTES[quote])WS_PRICES[coin+'_'+quote+'_cryptocom']={bid:bid,ask:ask,coin:coin,quote:quote,ex:'cryptocom',ts:Date.now()};
+      });
+    },8000);
+}
+
+function stopAllWS(){Object.keys(WS_CONNS).forEach(function(k){try{if(WS_CONNS[k])WS_CONNS[k].close();}catch(e){}WS_CONNS[k]=null;});}
+
+// ════════════════════════════════════
+// REST FETCHERS (3 exchanges)
+// ════════════════════════════════════
+function fetchBitgetRest(){
+  return withTimeout(fetch('https://api.bitget.com/api/v2/spot/market/tickers',{cache:'no-store'}),9000)
+    .then(function(r){return r.json();}).then(function(d){
+      var o={};
+      (d.data||[]).forEach(function(t){
+        var s=t.symbol||'',coin=null,quote=null;
+        if(s.endsWith('USDT')){coin=s.slice(0,-4);quote='USDT';}
+        else if(s.endsWith('USDC')){coin=s.slice(0,-4);quote='USDC';}
+        if(coin&&COINS.indexOf(coin)>=0&&ACTIVE_QUOTES[quote]&&+t.bidPr>0)
+          o[coin+'_'+quote+'_bitget']={bid:+t.bidPr,ask:+t.askPr,coin:coin,quote:quote,ex:'bitget',ts:Date.now()};
+      });return o;
+    });
+}
+
+// ════════════════════════════════════
+// PRICE ENGINE — WS cache + REST poll
+// ════════════════════════════════════
+var restTick=0;
+function fetchAllPrices(){
+  var prices={},now=Date.now();
+  Object.keys(WS_PRICES).forEach(function(k){var wp=WS_PRICES[k];if(now-wp.ts<10000)prices[k]=wp;});
+
+  function runBatch(ek,fn){
+    if(CB.isOpen(ek))return Promise.resolve();
+    var t0=performance.now();
+    return fn().then(function(res){
+      S.latency[ek]=Math.round(performance.now()-t0);CB.ok(ek);
+      Object.keys(res).forEach(function(k){if(!prices[k]||now-(prices[k].ts||0)>3000)prices[k]=res[k];});
+      updateExDot(ek,'live');
+    }).catch(function(){S.latency[ek]=999;CB.fail(ek);updateExDot(ek,'error');});
+  }
+
+  // Poll REST exchanges every 3 scan ticks (~1.5s) to avoid hammering
+  restTick++;
+  var restBatches=[];
+  if(restTick%3===0)restBatches.push(runBatch('bitget',fetchBitgetRest));
+
+  return Promise.all(restBatches).then(function(){S.prices=prices;return prices;});
+}
+
+// ════════════════════════════════════
+// ARB CALCULATOR
+// ════════════════════════════════════
+function calcArb(coin,quote,prices){
+  var bids={},asks={},liqBid={},liqAsk={};
+  // MIN liquidity = 3x trade size to ensure we can fill
+  var MIN_LIQ = TRADE_SIZE * 3;
+  EXK.forEach(function(ek){
+    if(ARB_EXCLUDED[ek])return;
+    var p=prices[coin+'_'+quote+'_'+ek];
+    if(!p||p.bid<=0||p.ask<=0)return;
+    // Enforce per-exchange minimum liquidity thresholds
+    var hasLiq = p.askLiq!=null && p.bidLiq!=null;
+    var minBuy = MIN_LIQ_BUY[ek] || TRADE_SIZE;
+    var minSell = MIN_LIQ_SELL[ek] || TRADE_SIZE;
+    if(hasLiq){
+      if(p.askLiq < Math.max(TRADE_SIZE, minBuy))return; // not enough to buy
+      if(p.bidLiq < Math.max(TRADE_SIZE, minSell))return; // not enough to sell
+    } else {
+      // No liquidity data at all (REST polling, no depth) → use price age as proxy
+      // If price is stale > 30s, skip this exchange for arb
+      if(Date.now()-p.ts > 30000)return;
+    }
+    bids[ek]=p.bid; asks[ek]=p.ask;
+    liqBid[ek]=hasLiq?p.bidLiq:999999;
+    liqAsk[ek]=hasLiq?p.askLiq:999999;
+  });
+  var bkArr=Object.keys(asks).sort(function(a,b){return asks[a]-asks[b];});
+  var skArr=Object.keys(bids).sort(function(a,b){return bids[b]-bids[a];});
+  if(!bkArr.length||!skArr.length)return null;
+  var bk=bkArr[0],sk=skArr[0];
+  if(bk===sk){if(bkArr.length>1)bk=bkArr[1];else if(skArr.length>1)sk=skArr[1];else return null;}
+  if(bk===sk)return null;
+  var buyAsk=asks[bk],sellBid=bids[sk];
+  if(!_safe(buyAsk)||!_safe(sellBid)||buyAsk<=0||sellBid<=0)return null;
+  // Effective price impact: if we're buying a large % of available liquidity, price moves
+  var availBuy=liqAsk[bk]||999999;
+  var availSell=liqBid[sk]||999999;
+  // Price impact estimate: (TRADE_SIZE / available_liq) * 0.5 (rough market impact)
+  var impactBuy = availBuy < 999999 ? (TRADE_SIZE/availBuy)*0.5 : 0;
+  var impactSell = availSell < 999999 ? (TRADE_SIZE/availSell)*0.5 : 0;
+  var gross=(sellBid-buyAsk)/buyAsk*100,fees=(TAKER[bk]+TAKER[sk])*100;
+  var net=gross-fees-0.01-impactBuy-impactSell;
+  if(net<MIN_SPREAD)return null;
+  var qty=TRADE_SIZE/buyAsk,profit=(sellBid-buyAsk)*qty-(fees/100)*TRADE_SIZE;
+  var liqScore=Math.min(availBuy,availSell);
+  var liqLabel=liqScore>10000?'HIGH':liqScore>2000?'MED':liqScore>500?'LOW':'VERY LOW';
+  var netWarn=getNetworkWarning(coin,bk,sk);
+  // If network mismatch AND spread can't cover bridge/gas cost -> filter out
+  // ETH gas ~$15 min, so at TRADE_SIZE < $500 and spread < 5% = not worth it
+  if(netWarn){
+    var gasEstimate=15; // USD avg ETH gas
+    var profitAfterGas=profit-gasEstimate;
+    if(profitAfterGas<=0)return null; // definitely not worth it
+  }
+  return {coin:coin,quote:quote,buyEx:bk,sellEx:sk,buyAsk:buyAsk,sellBid:sellBid,
+    gross:gross,fees:fees,net:net,profit:profit,qty:qty,allBids:bids,allAsks:asks,
+    availBuy:availBuy,availSell:availSell,liqLabel:liqLabel,
+    impact:impactBuy+impactSell,networkWarn:netWarn,
+    risk:net>=0.4?'safe':net>=0.2?'med':'risky',ts:Date.now()};
+}
+function findArbs(prices){
+  var r=[];
+  COINS.forEach(function(coin){['USDT','USDC','USD','EUR'].forEach(function(q){
+    if(!ACTIVE_QUOTES[q])return;var res=calcArb(coin,q,prices);if(res)r.push(res);
+  });});
+  return r.sort(function(a,b){return b.net-a.net;});
+}
+
+// ════════════════════════════════════
+// RENDER
+// ════════════════════════════════════
+var prevHash='';
+function renderOpps(results){
+  var oc=g('opp-count'),list=g('opp-list'),empty=g('opp-empty');
+  if(!list)return;
+  // FREEZE MODE: dacă nu sunt rezultate noi, păstrează ultimele vizibile
+  if(!results.length){
+    // Nu șterge nimic - lasă ce e pe ecran
+    // Doar actualizează badge-ul să arate că sunt stale
+    var staleBar=g('stale-bar');
+    if(!staleBar){
+      staleBar=document.createElement('div');staleBar.id='stale-bar';
+      staleBar.style.cssText='font-size:9px;color:var(--yellow);text-align:center;padding:4px;opacity:.7;border-bottom:1px solid var(--border)';
+      if(list.parentNode)list.parentNode.insertBefore(staleBar,list);
+    }
+    S._staleCount=(S._staleCount||0)+1;
+    var sec=Math.round(S._staleCount*SCAN_INTERVAL/1000);
+    staleBar.textContent='⏸ Prețuri înghețate — nicio oportunitate ≥'+MIN_SPREAD.toFixed(2)+'% · Ultimul update acum '+sec+'s';
+    staleBar.style.display='block';
+    if(oc)oc.textContent='0 live ('+sec+'s vechi)';
+    return;
+  }
+  // Avem rezultate noi — resetează stale
+  S._staleCount=0;
+  var staleBar=g('stale-bar');if(staleBar)staleBar.style.display='none';
+  var hash=results.slice(0,8).map(function(r){return r.coin+r.buyEx+r.sellEx+r.net.toFixed(2);}).join('|');
+  if(hash===prevHash)return;prevHash=hash;
+  // Hide/detach empty before clearing
+  if(empty&&empty.parentNode===list)list.removeChild(empty);
+  if(oc)oc.textContent=results.length+' găsite';
+  while(list.firstChild)list.removeChild(list.firstChild);
+  results.slice(0,15).forEach(function(r,i){
+    var div=document.createElement('div');div.className='opp '+r.risk+(i<3?' NEW':'');div.onclick=function(){selectArb(r);};
+    if(!EX[r.buyEx]||!EX[r.sellEx])return;
+    var buyC=EX[r.buyEx].c,sellC=EX[r.sellEx].c,spreadC=r.risk==='safe'?'var(--green)':r.risk==='med'?'var(--yellow)':'var(--red)';
+    div.innerHTML='<div class="opp-top"><div style="display:flex;align-items:center;gap:6px"><span class="opp-coin">'+r.coin+'</span><span style="font-size:7px;padding:1px 5px;border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--text3)">'+r.quote+'</span>'
+      +(r.risk==='safe'?'<span style="color:var(--green);font-size:8px">✓ SAFE</span>':r.risk==='med'?'<span style="color:var(--yellow);font-size:8px">~ MED</span>':'<span style="color:var(--red);font-size:8px">!</span>')
+      +(r.networkWarn?'<span style="color:var(--red);font-size:7px;background:rgba(255,50,50,.15);padding:1px 5px;border-radius:4px;border:1px solid var(--red)">⚠ REȚELE DIFERITE</span>':'')
+      +'</div><span style="font-family:Rajdhani,sans-serif;font-size:20px;font-weight:700;color:'+spreadC+'">+'+r.net.toFixed(3)+'%</span></div>'
+      +'<div class="opp-route"><div class="opp-ex buy"><div class="ex-action" style="color:var(--green)">CUMPĂRĂ</div><div class="ex-name" style="color:'+buyC+'">'+EX[r.buyEx].n+'</div><div class="ex-price">@'+r.buyAsk.toPrecision(6)+'</div></div>'
+      +'<div style="color:var(--text3);font-size:14px">→</div>'
+      +'<div class="opp-ex sell"><div class="ex-action" style="color:var(--red)">VINDE</div><div class="ex-name" style="color:'+sellC+'">'+EX[r.sellEx].n+'</div><div class="ex-price">@'+r.sellBid.toPrecision(6)+'</div></div></div>'
+      +'<div class="opp-meta"><span>Brut: '+r.gross.toFixed(3)+'% | Taxe: <span style="color:var(--red)">'+r.fees.toFixed(3)+'%</span>'
+      +(r.liqLabel?(' | Liq: <span style="color:'+(r.liqLabel==='HIGH'?'var(--green)':r.liqLabel==='MED'?'var(--yellow)':'var(--red)')+'">'+r.liqLabel+'</span>'):'')
+      +'</span><span class="opp-profit '+(r.profit>0?'pos':'neg')+'">'+(r.profit>0?'+':'')+'$'+r.profit.toFixed(3)+'</span></div>';
+    list.appendChild(div);
+  });
+}
+
+function buildUrl(ek,coin,quote){
+  var t=EX[ek]?EX[ek].url:'';
+  return t.replace(/{COIN}/g,coin).replace(/{QUOTE}/g,quote).replace(/{coin}/g,coin.toLowerCase()).replace(/{quote}/g,quote.toLowerCase());
+}
+
+function selectArb(r){
+  S.selectedArb=r;g('instr-placeholder').style.display='none';g('selected-opp').className='instr-card show';
+  var bN=EX[r.buyEx].n,sN=EX[r.sellEx].n,bC=EX[r.buyEx].c,sC=EX[r.sellEx].c,qty=r.qty.toPrecision(5);
+  g('sel-title').textContent='▲ '+r.coin+'/'+r.quote+' — +'+r.net.toFixed(3)+'% NET';
+  // Network warning block
+  var nwEl=g('network-warn-block');
+  if(!nwEl){nwEl=document.createElement('div');nwEl.id='network-warn-block';var icard=g('selected-opp');if(icard)icard.insertBefore(nwEl,icard.firstChild);}
+  if(r.networkWarn){
+    nwEl.style.cssText='background:rgba(255,30,30,.12);border:1px solid #ff4444;border-radius:6px;padding:10px 14px;margin-bottom:10px;font-size:11px;display:block';
+    nwEl.innerHTML='<div style="color:#ff4444;font-weight:700;font-size:12px;margin-bottom:5px">⚠ REȚELE INCOMPATIBILE — VERIFICĂ ÎNAINTE!</div>'
+      +'<div style="color:var(--text2);line-height:1.5">'
+      +r.networkWarn.msg+'<br>'
+      +'<span style="color:var(--yellow)">→ Transferul direct poate fi imposibil sau prea scump pe ETH!</span>'
+      +'</div>';
+  } else { nwEl.style.display='none'; nwEl.innerHTML=''; }
+  g('step1-detail').innerHTML='Deschide <b style="color:'+bC+'">'+bN+'</b> · pereche <b>'+r.coin+'/'+r.quote+'</b>';
+  var sl1=g('step1-link');sl1.href=buildUrl(r.buyEx,r.coin,r.quote);sl1.textContent='→ Deschide '+bN;sl1.style.color=bC;sl1.style.borderColor=bC+'44';
+  g('step2-detail').innerHTML='Plasează <b style="color:var(--green)">MARKET BUY</b> pe <b style="color:'+bC+'">'+bN+'</b>';
+  var buyLiqStr=r.availBuy&&r.availBuy<999999?'<br>📊 Lichiditate buy: <b style="color:'+(r.availBuy>r.availBuy*3?'var(--green)':r.availBuy>TRADE_SIZE*2?'var(--yellow)':'var(--red)')+'">$'+Math.round(r.availBuy)+'</b> disponibil (top 3 niveluri)':'';
+  g('step2-val').innerHTML='Cheltuiește: <span style="color:var(--yellow)">$'+TRADE_SIZE.toFixed(2)+' '+r.quote+'</span><br>Primești ≈ <span style="color:var(--green)">'+qty+' '+r.coin+'</span><br>Preț ASK acum: '+r.buyAsk.toPrecision(7)+buyLiqStr;
+  g('step3-detail').innerHTML='Deschide <b style="color:'+sC+'">'+sN+'</b> · pereche <b>'+r.coin+'/'+r.quote+'</b>'
+    +(r.networkWarn?'<br><span style="color:var(--red);font-size:10px">⚠ Verifică că '+sN+' acceptă '+r.networkWarn.buyNetwork+' pentru depozit!</span>':'');
+  var sl3=g('step3-link');sl3.href=buildUrl(r.sellEx,r.coin,r.quote);sl3.textContent='→ Deschide '+sN;sl3.style.color=sC;sl3.style.borderColor=sC+'44';
+  var estimSell=r.qty*r.sellBid*(1-(TAKER[r.sellEx]||0.001));
+  g('step4-detail').innerHTML='Plasează <b style="color:var(--red)">MARKET SELL</b> pe <b style="color:'+sC+'">'+sN+'</b>';
+  var sellLiqStr=r.availSell&&r.availSell<999999?'<br>📊 Lichiditate sell: <b style="color:'+(r.availSell>TRADE_SIZE*3?'var(--green)':r.availSell>TRADE_SIZE?'var(--yellow)':'var(--red)')+'">$'+Math.round(r.availSell)+'</b> disponibil (top 3 niveluri)':'';
+  var impactStr=r.impact>0?'<br>⚡ Impact estimat: <span style="color:var(--yellow)">-'+r.impact.toFixed(3)+'%</span>':'';
+  g('step4-val').innerHTML='Vinde: <span style="color:var(--yellow)">'+qty+' '+r.coin+'</span><br>Primești ≈ <span style="color:var(--green)">$'+estimSell.toFixed(2)+' '+r.quote+'</span><br><b style="color:var(--green)">Profit net ≈ '+(r.profit>0?'+$'+r.profit.toFixed(3):'—')+'</b>'+sellLiqStr+impactStr;
+  var age=Math.round((Date.now()-r.ts)/1000);
+  var ae=g('instr-alert');
+  if(r.risk==='risky'){ae.className='alert-box danger';ae.innerHTML='⚠ Spread mic! Date de '+age+'s. Acționează IMEDIAT sau skip.';}
+  else if(r.risk==='med'){ae.className='alert-box warn';ae.innerHTML='⏱ Date de '+age+'s. Verifică prețul înainte de plasare.';}
+  else{ae.className='alert-box info';ae.innerHTML='✓ Oportunitate solidă! Date de '+age+'s. Confirmă prețul pe exchange.';}
+  var tbody=g('cmp-tbody');tbody.innerHTML='';
+  var uniq=[];Object.keys(r.allBids).concat(Object.keys(r.allAsks)).forEach(function(x){if(uniq.indexOf(x)<0)uniq.push(x);});
+  uniq.sort(function(a,b){return(r.allBids[b]||0)-(r.allBids[a]||0);});
+  uniq.forEach(function(ek){
+    var bid=r.allBids[ek]||0,ask=r.allAsks[ek]||0,tr=document.createElement('tr');
+    if(ek===r.sellEx||ek===r.buyEx)tr.className='best';
+    tr.innerHTML='<td style="color:'+(EX[ek]?EX[ek].c:'#aaa')+'">'+(EX[ek]?EX[ek].n:ek)+(ek===r.buyEx?' 🟢':ek===r.sellEx?' 🔴':'')+'</td>'
+      +'<td style="color:var(--green)">'+(bid>0?bid.toPrecision(6):'—')+'</td>'
+      +'<td style="color:var(--red)">'+(ask>0?ask.toPrecision(6):'—')+'</td>';
+    tbody.appendChild(tr);
+  });
+  if(SOUND_ON)playAlert(r.net>0.5?1047:880);
+}
+
+// ════════════════════════════════════
+// EX STATUS
+// ════════════════════════════════════
+function initExStatus(){
+  var w=g('ex-status');if(!w)return;w.innerHTML='';
+  EXK.forEach(function(ek){
+    var d=document.createElement('div');d.id='exdot-'+ek;d.className='ex-dot';
+    var excl=ARB_EXCLUDED[ek];
+    d.style.color=excl?'var(--text3)':EX[ek].c;
+    d.style.borderColor=excl?'rgba(255,255,255,.1)':EX[ek].c+'33';
+    d.style.opacity=excl?'0.45':'1';
+    d.title=excl?EX[ek].n+' — exclus din ARB (price feed only)':'';
+    d.innerHTML=EX[ek].n+'<span class="ex-mode">'+(excl?'EXCL':(EX[ek].ws?'WS':'REST'))+'</span>';
+    w.appendChild(d);
+  });
+}
+function updateExDot(ek,state){
+  var d=g('exdot-'+ek);if(!d)return;
+  d.className='ex-dot'+(state==='live'?' live':' error');
+  d.style.color=state==='live'?EX[ek].c:'#553344';
+}
+function updateExCount(){
+  var alive=EXK.filter(function(ek){var d=g('exdot-'+ek);return d&&d.classList.contains('live');}).length;
+  var el=g('s-ex');if(el)el.textContent=alive+' / '+EXK.length;
+}
+
+// ════════════════════════════════════
+// SCAN LOOP
+// ════════════════════════════════════
+function scanLoop(){
+  if(!S.running)return;
+  setStatus('scan');var t0=performance.now();
+  fetchAllPrices().then(function(prices){
+    if(!S.running)return;
+    S.scanCount++;var results=findArbs(prices);S.results=results;
+    renderOpps(results);
+    updateTicker(results);
+    if(S.selectedArb){var upd=results.find(function(r){return r.coin===S.selectedArb.coin&&r.quote===S.selectedArb.quote;});if(upd)selectArb(upd);}
+    var ss=g('s-scans');if(ss)ss.textContent=S.scanCount;
+    var so=g('s-opps');if(so)so.textContent=results.length;
+    var sb=g('s-best');if(sb)sb.textContent=results.length?'+'+results[0].net.toFixed(3)+'%':'—';
+    var lu=g('lupd');if(lu)lu.textContent=new Date().toTimeString().slice(0,8);
+    var lats=Object.values(S.latency).filter(function(x){return x>0&&x<900;});
+    var sl=g('s-lat');if(sl)sl.textContent=lats.length?Math.round(lats.reduce(function(a,b){return a+b;})/lats.length)+'ms':'—';
+    updateExCount();setStatus(results.length>0?'ok':'idle');
+    if(SOUND_ON&&results.length>0&&results[0].net>0.5)playAlert(880);
+    S.timer=setTimeout(scanLoop,Math.max(50,SCAN_INTERVAL-(Math.round(performance.now()-t0))));
+  }).catch(function(e){xlog('Scan: '+e.message,'fail');S.timer=setTimeout(scanLoop,SCAN_INTERVAL);});
+}
+
+// ════════════════════════════════════
+// SOUND & UI
+// ════════════════════════════════════
+var _ac=null;
+function playAlert(freq){try{if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();var osc=_ac.createOscillator(),gain=_ac.createGain();osc.type='sine';osc.frequency.value=freq||880;gain.gain.setValueAtTime(0.07,_ac.currentTime);gain.gain.exponentialRampToValueAtTime(0.001,_ac.currentTime+0.3);osc.connect(gain);gain.connect(_ac.destination);osc.start();osc.stop(_ac.currentTime+0.3);}catch(e){}}
+function toggleSound(){SOUND_ON=!SOUND_ON;var btn=g('sound-btn');if(btn){btn.textContent=SOUND_ON?'🔊':'🔇';btn.className=SOUND_ON?'on':'';}if(SOUND_ON)playAlert(660);}
+
+function initControls(){
+  document.querySelectorAll('[data-ms]').forEach(function(btn){btn.addEventListener('click',function(){SCAN_INTERVAL=+this.getAttribute('data-ms');document.querySelectorAll('[data-ms]').forEach(function(b){b.classList.remove('active');});this.classList.add('active');var sv=g('s-speed');if(sv)sv.textContent=SCAN_INTERVAL/1000+'s';});});
+  document.querySelectorAll('[data-spr]').forEach(function(btn){btn.addEventListener('click',function(){MIN_SPREAD=+this.getAttribute('data-spr');document.querySelectorAll('[data-spr]').forEach(function(b){b.classList.remove('active');});this.classList.add('active');prevHash='';});});
+  document.querySelectorAll('.qfilt').forEach(function(btn){btn.addEventListener('click',function(){var q=this.getAttribute('data-q');ACTIVE_QUOTES[q]=!ACTIVE_QUOTES[q];this.className='qfilt'+(ACTIVE_QUOTES[q]?' on':'');prevHash='';});});
+  var btn=g('btn-start');if(!btn)return;
+  btn.addEventListener('click',function(){
+    if(S.running){S.running=false;clearTimeout(S.timer);stopAllWS();btn.textContent='▶ START SCAN';btn.className='';setStatus('idle');xlog('Scanner oprit','warn');var tw=g('ticker-wrap');if(tw)tw.classList.remove('active');}
+    else{
+      try{
+        S.running=true;S._staleCount=0;btn.textContent='■ STOP';btn.className='stop';
+        xlog('🔍 Se descoperă monede de pe exchange-uri...','ok');
+        discoverCoins(function(){
+          if(!S.running)return;
+          xlog('Scanner pornit ⚡ '+SCAN_INTERVAL+'ms — 13 ex · '+COINS.length+' monede','ok');
+          startWS_Binance();startWS_Bybit();startWS_OKX();startWS_Coinbase();startWS_Kraken();
+          startWS_KuCoin();startWS_Gate();startWS_MEXC();startWS_BingX();startWS_CryptoCom();
+          setTimeout(scanLoop,1500);
+        });
+      }catch(startErr){
+        S.running=false;btn.textContent='▶ START SCAN';btn.className='';
+        xlog('Start error: '+startErr.message,'fail');
+        console.error('Start error:',startErr);
+      }
+    }
+  });
+}
+
+(function(){
+  try{
+    initExStatus();
+    initControls();
+    setStatus('idle');
+    var em=g('opp-empty');if(em)em.style.display='block';
+    xlog('ArbBot Manual v2.1 — 13 ex · 0.5s · '+COINS.length+' monede','ok');
+    xlog('WS live: Binance·Bybit·OKX·Coinbase·Kraken·KuCoin·Gate·MEXC·BingX·Crypto.com','info');
+    xlog('REST poll: Bitget','info');
+  }catch(e){
+    var errDiv=document.createElement('div');
+    errDiv.style.cssText='position:fixed;top:0;left:0;right:0;background:#f00;color:#fff;padding:12px;font-size:13px;z-index:9999;font-family:monospace';
+    errDiv.textContent='Init error: '+e.message+' — '+e.stack;
+    document.body.appendChild(errDiv);
+    console.error('ArbBot init error:',e);
+  }
+})();
+
+// ════════════════════════════════════
+// TICKER BAR
+// ════════════════════════════════════
+var tickerArbs = [];
+var tickerAnimSpeed = 60; // seconds for full scroll
+
+function buildTickerItem(r) {
+  var spreadC = r.risk === 'safe' ? 'safe' : r.risk === 'med' ? 'med' : 'risky';
+  var buyN = EX[r.buyEx] ? EX[r.buyEx].n : r.buyEx;
+  var sellN = EX[r.sellEx] ? EX[r.sellEx].n : r.sellEx;
+  var profitStr = r.profit > 0 ? '+$' + r.profit.toFixed(2) : '$' + r.profit.toFixed(2);
+  var liqColor = r.liqLabel==='HIGH'?'#00ff88':r.liqLabel==='MED'?'#f5c842':r.liqLabel==='LOW'?'#ff8844':'#ff4466';
+  var liqBadge = r.liqLabel ? '<span style="font-size:6px;color:'+liqColor+';margin-left:2px">LIQ:'+r.liqLabel+'</span>' : '';
+  return '<div class="t-item ' + spreadC + '" onclick="selectArb(' + JSON.stringify(r).replace(/"/g,"'") + ')">'
+    + '<span class="t-coin">' + r.coin + '</span>'
+    + '<span class="t-badge">' + r.quote + '</span>'
+    + '<span class="t-route">' + buyN + '→' + sellN + '</span>'
+    + '<span class="t-spread">+' + r.net.toFixed(3) + '%</span>'
+    + '<span class="t-profit">' + profitStr + '</span>'
+    + liqBadge
+    + '</div>';
+}
+
+function updateTicker(results) {
+  var wrap = g('ticker-wrap');
+  var track = g('ticker-track');
+  if (!wrap || !track) return;
+
+  if (!results || results.length === 0) {
+    // Păstrează ticker-ul cu ultimele oportunități — nu reseta
+    return;
+  }
+
+  wrap.classList.add('active');
+
+  // Sort: safe first, then by net desc
+  var sorted = results.slice().sort(function(a,b){
+    var rO = {safe:0,med:1,risky:2};
+    if (rO[a.risk] !== rO[b.risk]) return rO[a.risk] - rO[b.risk];
+    return b.net - a.net;
+  });
+
+  // Build items HTML - duplicate for seamless loop
+  var items = sorted.map(buildTickerItem).join('<span class="t-sep">◆</span>');
+  var full = items + '<span class="t-sep" style="padding:0 20px">●●●</span>' + items;
+  track.innerHTML = full;
+
+  // Adjust speed based on count: more items = faster scroll to maintain density
+  var baseSpeed = Math.max(20, Math.min(80, sorted.length * 4));
+  track.style.animation = 'none';
+  track.offsetHeight; // reflow
+  track.style.animation = 'ticker-scroll ' + baseSpeed + 's linear infinite';
+}
+
+</script>
+</body>
+</html>
