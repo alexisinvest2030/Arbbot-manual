@@ -447,6 +447,8 @@ function wsConnect(name,url,onOpen,onMsg,reconnectDelay){
 var COINS_LOADED = false;
 
 function discoverCoins(callback){
+  // Binance, Bybit, OKX au CORS deschis pentru browsere
+  // Gate.io, MEXC, KuCoin, Bitget blochează CORS → folosim doar lista statică pentru ele
   var bad = new Set([
     'USDT','USDC','BUSD','TUSD','USDD','USDP','DAI','FRAX','LUSD','GUSD',
     'WBTC','WETH','WBNB','STETH','RETH','CBETH','WDOGE','WETC',
@@ -461,13 +463,13 @@ function discoverCoins(callback){
     if(done>=total){
       var prev = COINS.length;
       COINS = Array.from(discovered).filter(validCoin).sort();
-      xlog('🔍 Auto-discovery: '+COINS.length+' monede (+'+(COINS.length-prev)+' noi)','ok');
+      xlog('🔍 Auto-discovery: '+COINS.length+' monede (+'+(COINS.length-prev)+' noi din Binance/Bybit/OKX)','ok');
       COINS_LOADED = true;
       callback();
     }
   };
 
-  // Binance
+  // Binance — permite CORS ✓
   fetch('https://api.binance.com/api/v3/exchangeInfo')
     .then(function(r){return r.json();})
     .then(function(d){
@@ -476,9 +478,9 @@ function discoverCoins(callback){
           discovered.add(s.baseAsset);
       });
       finish();
-    }).catch(function(){ finish(); });
+    }).catch(function(e){ xlog('Discovery Binance: '+e.message,'warn'); finish(); });
 
-  // Bybit
+  // Bybit — permite CORS ✓
   fetch('https://api.bybit.com/v5/market/instruments-info?category=spot&limit=1000')
     .then(function(r){return r.json();})
     .then(function(d){
@@ -487,9 +489,9 @@ function discoverCoins(callback){
           discovered.add(s.baseCoin);
       });
       finish();
-    }).catch(function(){ finish(); });
+    }).catch(function(e){ xlog('Discovery Bybit: '+e.message,'warn'); finish(); });
 
-  // OKX
+  // OKX — permite CORS ✓
   fetch('https://www.okx.com/api/v5/public/instruments?instType=SPOT')
     .then(function(r){return r.json();})
     .then(function(d){
@@ -498,37 +500,10 @@ function discoverCoins(callback){
           discovered.add(s.baseCcy);
       });
       finish();
-    }).catch(function(){ finish(); });
+    }).catch(function(e){ xlog('Discovery OKX: '+e.message,'warn'); finish(); });
 
-  // Gate.io (bonus - nu blochează CORS din browser)
-  fetch('https://api.gateio.ws/api/v4/spot/currency_pairs')
-    .then(function(r){return r.json();})
-    .then(function(d){
-      (d||[]).forEach(function(s){
-        if(s.trade_status==='tradable' && (s.quote==='USDT'||s.quote==='USDC'))
-          discovered.add(s.base);
-      });
-    }).catch(function(){});
-
-  // MEXC
-  fetch('https://api.mexc.com/api/v3/exchangeInfo')
-    .then(function(r){return r.json();})
-    .then(function(d){
-      (d.symbols||[]).forEach(function(s){
-        if(s.status==='ENABLED' && (s.quoteAsset==='USDT'||s.quoteAsset==='USDC'))
-          discovered.add(s.baseAsset);
-      });
-    }).catch(function(){});
-
-  // KuCoin
-  fetch('https://api.kucoin.com/api/v2/symbols')
-    .then(function(r){return r.json();})
-    .then(function(d){
-      ((d.data)||[]).forEach(function(s){
-        if(s.enableTrading && (s.quoteCurrency==='USDT'||s.quoteCurrency==='USDC'))
-          discovered.add(s.baseCurrency);
-      });
-    }).catch(function(){});
+  // Gate / MEXC / KuCoin / Bitget → blochează CORS din browser
+  // Lista lor statică e deja inclusă în COINS la build time
 }
 
 function startWS_Binance(){
