@@ -1,4 +1,88 @@
-<!DOCTYPE html>
+<
+
+// ═══════════════════════════════════════════
+// CORS PROXY MODAL
+// ═══════════════════════════════════════════
+function openProxyModal(){
+  var modal=document.getElementById('proxy-modal');
+  var input=document.getElementById('proxy-input');
+  modal.style.display='flex';
+  input.value=CORS_PROXY||'';
+  updateProxyStatus();
+}
+function closeProxyModal(){
+  document.getElementById('proxy-modal').style.display='none';
+}
+function updateProxyStatus(){
+  var input=document.getElementById('proxy-input');
+  var status=document.getElementById('proxy-status');
+  var val=(input.value||'').trim();
+  if(!val){
+    status.innerHTML='<span style="color:var(--text3)">⚪ Fără proxy — KuCoin/BitMart/HTX vor fi sărite</span>';
+  } else if(val.startsWith('https://')){
+    status.innerHTML='<span style="color:var(--yellow)">⏳ Introdu URL-ul și apasă Testează sau Salvează</span>';
+  } else {
+    status.innerHTML='<span style="color:var(--red)">⚠ URL invalid — trebuie să înceapă cu https://</span>';
+  }
+}
+function saveProxy(){
+  var input=document.getElementById('proxy-input');
+  var val=(input.value||'').trim().replace(/\/$/,''); // remove trailing slash
+  CORS_PROXY=val;
+  try{ localStorage.setItem('arb_cors_proxy',val); }catch(e){}
+  updateProxyBtn();
+  closeProxyModal();
+  if(val) xlog('✓ CORS Proxy salvat: '+val,'ok');
+  else xlog('CORS Proxy șters — KuCoin/HTX/BitMart dezactivate','warn');
+}
+function testProxy(){
+  var input=document.getElementById('proxy-input');
+  var status=document.getElementById('proxy-status');
+  var val=(input.value||'').trim().replace(/\/$/,'');
+  if(!val||!val.startsWith('https://')){
+    status.innerHTML='<span style="color:var(--red)">⚠ URL invalid</span>';
+    return;
+  }
+  status.innerHTML='<span style="color:var(--yellow)">⏳ Testez conexiunea...</span>';
+  var testUrl=val+'?url='+encodeURIComponent('https://api.binance.com/api/v3/ping');
+  fetch(testUrl,{cache:'no-store'})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      status.innerHTML='<span style="color:var(--green)">✓ Proxy funcționează! Răspuns: '+JSON.stringify(d).slice(0,50)+'</span>';
+    })
+    .catch(function(e){
+      status.innerHTML='<span style="color:var(--red)">✗ Eroare: '+e.message+'</span>';
+    });
+}
+function updateProxyBtn(){
+  var btn=document.getElementById('proxy-btn');
+  if(!btn)return;
+  if(CORS_PROXY){
+    btn.style.background='var(--green)';
+    btn.style.color='#000';
+    btn.style.borderColor='var(--green)';
+    btn.textContent='⚡ PROXY ON';
+  } else {
+    btn.style.background='transparent';
+    btn.style.color='var(--text3)';
+    btn.style.borderColor='var(--border)';
+    btn.textContent='⚡ PROXY';
+  }
+}
+// Close modal on backdrop click
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('proxy-modal').addEventListener('click',function(e){
+    if(e.target===this)closeProxyModal();
+  });
+  // Populate input with saved value
+  var saved=CORS_PROXY;
+  if(saved){
+    var inp=document.getElementById('proxy-input');
+    if(inp)inp.value=saved;
+  }
+  updateProxyBtn();
+});
+!DOCTYPE html>
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
@@ -179,7 +263,7 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 <div id="header">
   <div>
     <div class="logo-text">▲ ARB<span style="color:#fff;opacity:.4">BOT</span> MANUAL</div>
-    <div class="logo-sub">SCANNER ARB · EXECUȚIE MANUALĂ · ZERO API · 11 EXCHANGE · 0.5s</div>
+    <div class="logo-sub">SCANNER ARB · EXECUȚIE MANUALĂ · ZERO API · 14 EXCHANGE · 0.5s</div>
   </div>
   <div class="status-pill"><div class="sdot idle" id="sdot"></div><span id="stxt" style="color:var(--text3)">idle</span></div>
   <div class="status-pill"><span id="lupd" style="font-size:7px;color:var(--text3)">—</span></div>
@@ -219,6 +303,49 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
   <input type="range" id="size-r" min="10" max="5000" step="10" value="100"
     style="width:80px;accent-color:var(--green);vertical-align:middle"
     oninput="document.getElementById('size-lbl').textContent=this.value;TRADE_SIZE=+this.value">
+  <span class="sep">│</span>
+  <button id="proxy-btn" onclick="openProxyModal()"
+    style="font-size:8px;padding:3px 8px;border-radius:4px;border:1px solid;cursor:pointer;font-family:inherit;transition:.2s"
+    title="Configurează CORS Proxy pentru KuCoin/BitMart/HTX">
+    ⚡ PROXY
+  </button>
+</div>
+
+<!-- PROXY MODAL -->
+<div id="proxy-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:24px;width:480px;max-width:90vw">
+    <div style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:var(--green);margin-bottom:4px">⚡ CORS Proxy Config</div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:16px">Necesar pentru KuCoin, BitMart, HTX, MEXC (blochează CORS din browser)</div>
+    
+    <div style="font-size:10px;color:var(--text2);margin-bottom:6px">URL Worker Cloudflare:</div>
+    <input id="proxy-input" type="text" placeholder="https://arb-proxy.yourname.workers.dev"
+      style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 10px;color:var(--text1);font-family:monospace;font-size:11px;outline:none"
+      oninput="updateProxyStatus()">
+    
+    <div id="proxy-status" style="font-size:10px;margin-top:8px;min-height:16px"></div>
+    
+    <div style="font-size:9px;color:var(--text3);margin-top:12px;padding:8px;background:var(--bg3);border-radius:4px;line-height:1.8">
+      <b style="color:var(--text2)">Cum îl obții gratuit (5 min):</b><br>
+      1. <a href="https://workers.cloudflare.com" target="_blank" style="color:var(--green)">workers.cloudflare.com</a> → cont gratuit<br>
+      2. Create Worker → înlocuiește codul cu <b>cors-proxy-worker.js</b> din repo<br>
+      3. Deploy → copiază URL-ul aici
+    </div>
+    
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button onclick="saveProxy()"
+        style="flex:1;padding:8px;background:var(--green);color:#000;border:none;border-radius:4px;cursor:pointer;font-weight:700;font-family:inherit">
+        ✓ Salvează
+      </button>
+      <button onclick="testProxy()"
+        style="flex:1;padding:8px;background:transparent;color:var(--green);border:1px solid var(--green);border-radius:4px;cursor:pointer;font-family:inherit">
+        🔍 Testează
+      </button>
+      <button onclick="closeProxyModal()"
+        style="padding:8px 16px;background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-family:inherit">
+        ✕
+      </button>
+    </div>
+  </div>
 </div>
 
 <div id="ticker-wrap">
@@ -239,7 +366,7 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
       </div>
     </div>
     <div>
-      <div style="font-size:7px;color:var(--text3);margin-bottom:4px;padding:0 2px">STATUS 11 EXCHANGE-URI · WS = WebSocket live · REST = polling</div>
+      <div style="font-size:7px;color:var(--text3);margin-bottom:4px;padding:0 2px">STATUS 14 EXCHANGE-URI · WS = WebSocket live · REST = polling</div>
       <div id="ex-status"></div>
     </div>
     <div class="panel">
@@ -302,29 +429,39 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 <script>
 'use strict';
 var TRADE_SIZE=100, MIN_SPREAD=0.10, SCAN_INTERVAL=500, SOUND_ON=false;
+
+// ─── CORS PROXY ────────────────────────────────────────────────
+// Dacă ai deploy-at Cloudflare Worker, pune URL-ul aici
+// Tutorial: vezi cors-proxy-worker.js din repo
+// Lasă '' dacă nu ai proxy (KuCoin va fi sărit)
+var CORS_PROXY = ''; // ex: 'https://arb-proxy.yourname.workers.dev'
+// ──────────────────────────────────────────────────────────────
 var ACTIVE_QUOTES={USDT:true,USDC:true,USD:false,EUR:false};
 
 var EX={
-  binance:  {n:'Binance',    c:'#F0B90B',ws:true, url:'https://www.binance.com/en/trade/{COIN}_{QUOTE}'},
-  bybit:    {n:'Bybit',      c:'#F7A600',ws:true, url:'https://www.bybit.com/en/trade/spot/{COIN}/{QUOTE}'},
-  okx:      {n:'OKX',        c:'#7B61FF',ws:true, url:'https://www.okx.com/trade-spot/{coin}-{quote}'},
-  kraken:   {n:'Kraken',     c:'#5741D9',ws:true, url:'https://pro.kraken.com/app/trade/{coin}-{quote}'},
-  coinbase: {n:'Coinbase',   c:'#0052FF',ws:true, url:'https://pro.coinbase.com/trade/{COIN}-{QUOTE}'},
-  kucoin:   {n:'KuCoin',     c:'#23AF91',ws:true, url:'https://www.kucoin.com/trade/{COIN}-{QUOTE}'},
-  gate:     {n:'Gate.io',    c:'#E76E28',ws:true, url:'https://www.gate.io/trade/{COIN}_{QUOTE}'},
-  mexc:     {n:'MEXC',       c:'#00C087',ws:true, url:'https://www.mexc.com/exchange/{COIN}_{QUOTE}'},
-  bingx:    {n:'BingX',      c:'#1DA462',ws:true, url:'https://bingx.com/en/spot/{COIN}-{QUOTE}/'},
-  cryptocom:{n:'Crypto.com', c:'#1199FA',ws:true, url:'https://crypto.com/exchange/trade/{coin}_{quote}'},
-  bitget:   {n:'Bitget',     c:'#00CED1',ws:false,url:'https://www.bitget.com/spot/{COIN}{QUOTE}'},
+  binance:  {n:'Binance',    c:'#F0B90B',ws:true,  url:'https://www.binance.com/en/trade/{COIN}_{QUOTE}'},
+  bybit:    {n:'Bybit',      c:'#F7A600',ws:true,  url:'https://www.bybit.com/en/trade/spot/{COIN}/{QUOTE}'},
+  okx:      {n:'OKX',        c:'#7B61FF',ws:true,  url:'https://www.okx.com/trade-spot/{coin}-{quote}'},
+  kraken:   {n:'Kraken',     c:'#5741D9',ws:true,  url:'https://pro.kraken.com/app/trade/{coin}-{quote}'},
+  coinbase: {n:'Coinbase',   c:'#0052FF',ws:true,  url:'https://advanced.coinbase.com/trade/{COIN}-{QUOTE}'},
+  kucoin:   {n:'KuCoin',     c:'#23AF91',ws:true,  url:'https://www.kucoin.com/trade/{COIN}-{QUOTE}'},
+  gate:     {n:'Gate.io',    c:'#E76E28',ws:true,  url:'https://www.gate.io/trade/{COIN}_{QUOTE}'},
+  mexc:     {n:'MEXC',       c:'#00C087',ws:true,  url:'https://www.mexc.com/exchange/{COIN}_{QUOTE}'},
+  bingx:    {n:'BingX',      c:'#1DA462',ws:true,  url:'https://bingx.com/en/spot/{COIN}-{QUOTE}/'},
+  cryptocom:{n:'Crypto.com', c:'#1199FA',ws:true,  url:'https://crypto.com/exchange/trade/{coin}_{quote}'},
+  bitget:   {n:'Bitget',     c:'#00CED1',ws:false, url:'https://www.bitget.com/spot/{COIN}{QUOTE}'},
+  htx:      {n:'HTX',        c:'#2196F3',ws:true,  url:'https://www.htx.com/trade/{coin}_usdt/'},
+  bitmart:  {n:'BitMart',    c:'#FF6B35',ws:true,  url:'https://www.bitmart.com/trade/en-US?symbol={COIN}_{QUOTE}'},
+  wex:      {n:'WEX',        c:'#9C27B0',ws:false, url:'https://wex.app/spot/{COIN}{QUOTE}'},
 };
 var EXK=Object.keys(EX);
-var TAKER={binance:.001,mexc:.001,bybit:.001,okx:.001,kraken:.0026,coinbase:.006,kucoin:.001,bitget:.001,bingx:.001,gate:.002,cryptocom:.002};
+var TAKER={binance:.001,mexc:.001,bybit:.001,okx:.001,kraken:.0026,coinbase:.006,kucoin:.001,bitget:.001,bingx:.001,gate:.002,cryptocom:.002,htx:.002,bitmart:.0025,wex:.002};
 
 // Minimum BID liquidity (USD) required for an exchange to be valid as SELL side
 // Minimum ASK liquidity (USD) required for an exchange to be valid as BUY side
 // Exchanges with lower real volume get higher minimums to filter noise
 var MIN_LIQ_SELL = {
-  binance:  50,   // high volume, low threshold
+  binance:  50,
   bybit:    50,
   okx:      50,
   mexc:     30,
@@ -332,9 +469,12 @@ var MIN_LIQ_SELL = {
   kucoin:   30,
   bingx:    20,
   bitget:   20,
-  coinbase: 200,  // excluded anyway but high threshold
-  kraken:   200,  // excluded anyway
-  cryptocom:500,  // excluded anyway but very high - they often have fake/stale prices
+  coinbase: 100,  // taxe mari — threshold mai strict
+  kraken:   100,  // taxe mari
+  cryptocom:100,  // volum mic pe altcoins
+  htx:      50,   // fostul Huobi, volum decent
+  bitmart:  30,   // volum mediu
+  wex:      20,   // exchange mai mic
 };
 var MIN_LIQ_BUY = {
   binance:  50,
@@ -345,12 +485,15 @@ var MIN_LIQ_BUY = {
   kucoin:   30,
   bingx:    20,
   bitget:   20,
-  coinbase: 200,
-  kraken:   200,
-  cryptocom:500,
+  coinbase: 100,
+  kraken:   100,
+  cryptocom:100,
+  htx:      50,
+  bitmart:  30,
+  wex:      20,
 };
 // Exchange-uri excluse din calcul arb (taxe prea mari sau volum mic)
-var ARB_EXCLUDED={coinbase:true,kraken:true,cryptocom:true}; // crypto.com: volum real mic pe altcoins
+var ARB_EXCLUDED={}; // toate exchange-urile active în ARB — ajustează MIN_LIQ per exchange
 
 // Coins with KNOWN network fragmentation across exchanges
 // (different chains = withdrawal impossible or costs more than profit)
@@ -439,6 +582,39 @@ function wsConnect(name,url,onOpen,onMsg,reconnectDelay){
   return ws;
 }
 
+// Varianta pentru exchange-uri care trimit gzip (HTX/Huobi)
+function wsConnectGzip(name,url,onOpen,onMsg,reconnectDelay){
+  var ws=new WebSocket(url);
+  WS_CONNS[name]=ws;
+  ws.binaryType='blob';
+  ws.onopen=function(){updateExDot(name,'live');if(onOpen)onOpen(ws);};
+  ws.onmessage=function(e){
+    if(typeof e.data==='string'){
+      try{onMsg(JSON.parse(e.data));}catch(ex){}
+      return;
+    }
+    // Gzip Blob — decompress
+    if(typeof DecompressionStream==='undefined'){
+      // Fallback: try as text
+      var fr=new FileReader();
+      fr.onload=function(){try{onMsg(JSON.parse(fr.result));}catch(ex){}};
+      fr.readAsText(e.data);
+      return;
+    }
+    var ds=new DecompressionStream('gzip');
+    var w=e.data.stream().pipeThrough(ds);
+    new Response(w).text().then(function(txt){
+      try{onMsg(JSON.parse(txt));}catch(ex){}
+    }).catch(function(){});
+  };
+  ws.onerror=function(){updateExDot(name,'error');};
+  ws.onclose=function(){updateExDot(name,'error');WS_CONNS[name]=null;
+    if(S.running)setTimeout(function(){wsConnectGzip(name,url,onOpen,onMsg,reconnectDelay);},reconnectDelay||6000);
+  };
+  return ws;
+}
+
+
 
 // ═══════════════════════════════════════════════════
 // AUTO-DISCOVERY: fetch coin lists from exchanges at startup
@@ -502,8 +678,27 @@ function discoverCoins(callback){
       finish();
     }).catch(function(e){ xlog('Discovery OKX: '+e.message,'warn'); finish(); });
 
-  // Gate / MEXC / KuCoin / Bitget → blochează CORS din browser
-  // Lista lor statică e deja inclusă în COINS la build time
+  // Gate / MEXC / KuCoin → blochează CORS din browser fără proxy
+  // Dacă CORS_PROXY e setat, fetch-uiește și de la ele
+  if(CORS_PROXY){
+    fetch(CORS_PROXY+'?url='+encodeURIComponent('https://api.mexc.com/api/v3/exchangeInfo'))
+      .then(function(r){return r.json();})
+      .then(function(d){
+        (d.symbols||[]).forEach(function(s){
+          if(s.status==='ENABLED'&&(s.quoteAsset==='USDT'||s.quoteAsset==='USDC'))
+            discovered.add(s.baseAsset);
+        });
+      }).catch(function(){});
+
+    fetch(CORS_PROXY+'?url='+encodeURIComponent('https://api.gateio.ws/api/v4/spot/currency_pairs'))
+      .then(function(r){return r.json();})
+      .then(function(d){
+        (d||[]).forEach(function(s){
+          if(s.trade_status==='tradable'&&(s.quote==='USDT'||s.quote==='USDC'))
+            discovered.add(s.base);
+        });
+      }).catch(function(){});
+  }
 }
 
 function startWS_Binance(){
@@ -607,7 +802,11 @@ function startWS_Kraken(){
 }
 
 function startWS_KuCoin(){
-  withTimeout(fetch('https://api.kucoin.com/api/v1/bullet-public',{method:'POST',cache:'no-store'}),8000)
+  withTimeout(
+    CORS_PROXY
+      ? fetch(CORS_PROXY+'?url='+encodeURIComponent('https://api.kucoin.com/api/v1/bullet-public'),{method:'POST',cache:'no-store'})
+      : fetch('https://api.kucoin.com/api/v1/bullet-public',{method:'POST',cache:'no-store'}),
+    8000)
     .then(function(r){return r.json();})
     .then(function(d){
       if(d.code!=='200000'||!d.data)throw new Error('token fail');
@@ -731,10 +930,94 @@ function startWS_CryptoCom(){
 function stopAllWS(){Object.keys(WS_CONNS).forEach(function(k){try{if(WS_CONNS[k])WS_CONNS[k].close();}catch(e){}WS_CONNS[k]=null;});}
 
 // ════════════════════════════════════
-// REST FETCHERS (3 exchanges)
+// HTX (fostul Huobi) WebSocket
+// Folosește gzip compression — need DecompressionStream
+// ════════════════════════════════════
+function startWS_HTX(){
+  // HTX market.depth.step5 = top 5 nivele cu qty
+  // Subscriu batch-uri de 30 simboluri per conexiune
+  var allSubs=COINS.map(function(c){return 'market.'+c.toLowerCase()+'usdt.depth.step5';});
+  var chunks=[];for(var i=0;i<allSubs.length;i+=30)chunks.push(allSubs.slice(i,i+30));
+  chunks.forEach(function(chunk,ci){
+    wsConnectGzip('htx'+(ci||''),'wss://api.huobi.pro/ws',
+      function(ws){
+        chunk.forEach(function(sub){
+          ws.send(JSON.stringify({sub:sub,id:'arb'+Date.now()}));
+        });
+        if(ci===0)xlog('WS HTX ✓ ('+COINS.length+' perechi)','ok');
+        updateExDot('htx','live');
+      },
+      function(msg){
+        if(!msg)return;
+        // Heartbeat ping/pong
+        if(msg.ping){
+          Object.keys(WS_CONNS).forEach(function(k){
+            if(k.startsWith('htx')&&WS_CONNS[k]&&WS_CONNS[k].readyState===1)
+              WS_CONNS[k].send(JSON.stringify({pong:msg.ping}));
+          });
+          return;
+        }
+        if(!msg.ch||!msg.tick)return;
+        var parts=msg.ch.split('.');
+        var sym=(parts[1]||'').toUpperCase();
+        var coin=null,quote=null;
+        if(sym.endsWith('USDT')){coin=sym.slice(0,-4);quote='USDT';}
+        else if(sym.endsWith('USDC')){coin=sym.slice(0,-4);quote='USDC';}
+        if(!coin||COINS.indexOf(coin)<0)return;
+        var bids=msg.tick.bids||[],asks=msg.tick.asks||[];
+        if(!bids.length||!asks.length)return;
+        var bid=+bids[0][0],ask=+asks[0][0];
+        var bidQty=+bids[0][1],askQty=+asks[0][1];
+        var bidLiq=bids.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+        var askLiq=asks.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+        if(bid>0&&ask>0)WS_PRICES[coin+'_'+quote+'_htx']={bid:bid,ask:ask,bidQty:bidQty,askQty:askQty,bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'htx',ts:Date.now()};
+      },8000);
+  });
+}
+
+// ════════════════════════════════════
+// BitMart WebSocket
+// ════════════════════════════════════
+function startWS_BitMart(){
+  var allArgs=COINS.map(function(c){return 'spot/depth5:'+c+'_USDT';});
+  var chunks=[];for(var i=0;i<allArgs.length;i+=20)chunks.push(allArgs.slice(i,i+20));
+  chunks.forEach(function(chunk,ci){
+    wsConnectGzip('bitmart'+(ci||''),'wss://ws-manager-compress.bitmart.com/api?protocol=1.1',
+      function(ws){
+        ws.send(JSON.stringify({op:'subscribe',args:chunk}));
+        if(ci===0){xlog('WS BitMart ✓','ok');updateExDot('bitmart','live');}
+      },
+      function(msg){
+        if(!msg||!msg.data)return;
+        var tableStr=msg.table||'';
+        var data=Array.isArray(msg.data)?msg.data[0]:msg.data;
+        if(!data)return;
+        var symPart=tableStr.split(':')[1]||'';
+        var parts=symPart.split('_');if(parts.length<2)return;
+        var coin=parts[0],quote=parts[1];
+        if(!COINS.includes(coin)||!ACTIVE_QUOTES[quote])return;
+        var bids=data.buys||data.bids||[];
+        var asks=data.sells||data.asks||[];
+        if(!bids.length||!asks.length)return;
+        var getP=function(l){return +(Array.isArray(l)?l[0]:l.price||0);};
+        var getQ=function(l){return +(Array.isArray(l)?l[1]:l.amount||0);};
+        var bid=getP(bids[0]),ask=getP(asks[0]);
+        var bidLiq=bids.slice(0,3).reduce(function(s,l){return s+getP(l)*getQ(l);},0);
+        var askLiq=asks.slice(0,3).reduce(function(s,l){return s+getP(l)*getQ(l);},0);
+        if(bid>0&&ask>0)WS_PRICES[coin+'_'+quote+'_bitmart']={bid:bid,ask:ask,bidQty:getQ(bids[0]),askQty:getQ(asks[0]),bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'bitmart',ts:Date.now()};
+      },8000);
+  });
+}
+
+// ════════════════════════════════════
+// REST FETCHERS (Bitget + WEX)
 // ════════════════════════════════════
 function fetchBitgetRest(){
-  return withTimeout(fetch('https://api.bitget.com/api/v2/spot/market/tickers',{cache:'no-store'}),9000)
+  return withTimeout(
+    CORS_PROXY
+      ? fetch(CORS_PROXY+'?url='+encodeURIComponent('https://api.bitget.com/api/v2/spot/market/tickers'),{cache:'no-store'})
+      : fetch('https://api.bitget.com/api/v2/spot/market/tickers',{cache:'no-store'}),
+    9000)
     .then(function(r){return r.json();}).then(function(d){
       var o={};
       (d.data||[]).forEach(function(t){
@@ -746,6 +1029,28 @@ function fetchBitgetRest(){
       });return o;
     });
 }
+
+function fetchWexRest(){
+  // WEX (wex.app) — REST API public pentru tickers
+  return withTimeout(
+    fetch('https://wex.app/api/3/ticker/'+ COINS.slice(0,50).map(function(c){return c.toLowerCase()+'_usdt';}).join('-'),{cache:'no-store'}),
+    9000)
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var o={};
+      Object.keys(d||{}).forEach(function(pair){
+        var t=d[pair];if(!t)return;
+        var parts=pair.split('_');if(parts.length<2)return;
+        var coin=parts[0].toUpperCase(),quote=parts[1].toUpperCase();
+        if(!COINS.includes(coin)||!ACTIVE_QUOTES[quote])return;
+        var bid=+t.buy,ask=+t.sell; // WEX: buy=best bid, sell=best ask
+        if(bid>0&&ask>0)WS_PRICES[coin+'_'+quote+'_wex']={bid:bid,ask:ask,bidQty:0,askQty:0,bidLiq:0,askLiq:0,coin:coin,quote:quote,ex:'wex',ts:Date.now()};
+      });
+      updateExDot('wex','live');
+      return o;
+    }).catch(function(e){updateExDot('wex','error');return {};});
+}
+
 
 // ════════════════════════════════════
 // PRICE ENGINE — WS cache + REST poll
@@ -769,6 +1074,7 @@ function fetchAllPrices(){
   restTick++;
   var restBatches=[];
   if(restTick%3===0)restBatches.push(runBatch('bitget',fetchBitgetRest));
+  if(restTick%5===0)restBatches.push(runBatch('wex',fetchWexRest));
 
   return Promise.all(restBatches).then(function(){S.prices=prices;return prices;});
 }
@@ -1013,11 +1319,15 @@ function initControls(){
       try{
         S.running=true;S._staleCount=0;btn.textContent='■ STOP';btn.className='stop';
         xlog('🔍 Se descoperă monede de pe exchange-uri...','ok');
+          updateProxyBtn();
+          if(CORS_PROXY) xlog('✓ CORS Proxy: '+CORS_PROXY,'ok');
+          else xlog('⚠ Fără CORS Proxy — apasă ⚡ PROXY ca să setezi','warn');
         discoverCoins(function(){
           if(!S.running)return;
-          xlog('Scanner pornit ⚡ '+SCAN_INTERVAL+'ms — 13 ex · '+COINS.length+' monede','ok');
+          xlog('Scanner pornit ⚡ '+SCAN_INTERVAL+'ms — 14 ex · '+COINS.length+' monede','ok');
           startWS_Binance();startWS_Bybit();startWS_OKX();startWS_Coinbase();startWS_Kraken();
           startWS_KuCoin();startWS_Gate();startWS_MEXC();startWS_BingX();startWS_CryptoCom();
+          startWS_HTX();startWS_BitMart();
           setTimeout(scanLoop,1500);
         });
       }catch(startErr){
@@ -1035,7 +1345,7 @@ function initControls(){
     initControls();
     setStatus('idle');
     var em=g('opp-empty');if(em)em.style.display='block';
-    xlog('ArbBot Manual v2.1 — 13 ex · 0.5s · '+COINS.length+' monede','ok');
+    xlog('ArbBot Manual v2.1 — 14 ex · 0.5s · '+COINS.length+' monede','ok');
     xlog('WS live: Binance·Bybit·OKX·Coinbase·Kraken·KuCoin·Gate·MEXC·BingX·Crypto.com','info');
     xlog('REST poll: Bitget','info');
   }catch(e){
