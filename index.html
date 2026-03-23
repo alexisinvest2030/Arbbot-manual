@@ -519,7 +519,7 @@ var MIN_LIQ_SELL = {binance:50,bybit:50,okx:50,mexc:30,gate:30,kucoin:30,bingx:2
 var MIN_LIQ_BUY  = {binance:50,bybit:50,okx:50,mexc:30,gate:30,kucoin:30,bingx:20,bitget:20,coinbase:100,kraken:100,cryptocom:100,htx:50,bitmart:30,wex:20};
 
 // CORS Proxy — setat din butonul ⚡ PROXY din UI
-var CORS_PROXY = (function(){ try{ return localStorage.getItem('arb_cors_proxy')||''; }catch(e){ return ''; } })();
+var CORS_PROXY = (function(){ try{ return localStorage.getItem('arb_cors_proxy')||'https://ancient-brook-6a39.alexis-invest2030.workers.dev'; }catch(e){ return 'https://ancient-brook-6a39.alexis-invest2030.workers.dev'; } })();
 
 var COINS=['1INCH', 'AAVE', 'ACA', 'ACE', 'ACH', 'ACM', 'ACT', 'ADA', 'ADX', 'AERGO', 'AERO', 'AEVO', 'AGI', 'AGIX', 'AGLD', 'AI16Z', 'AION', 'AIOZ', 'AKRO', 'AKT', 'ALICE', 'ALLO', 'ALN', 'ALPACA', 'ALPHA', 'ALPINE', 'ALT', 'AMB', 'AMP', 'AMPL', 'ANT', 'APE', 'API3', 'APT', 'AR', 'ARB', 'ARDR', 'ARK', 'ARKM', 'ARPA', 'ASM', 'ASR', 'AST', 'ASTR', 'ATA', 'ATH', 'ATLAS', 'ATM', 'ATOM', 'AUDIO', 'AUDIUS', 'AURA', 'AVA', 'AVAX', 'AVNT', 'AXL', 'AXS', 'BAKE', 'BAL', 'BAND', 'BAR', 'BAT', 'BCH', 'BEL', 'BETA', 'BGB', 'BICO', 'BIO', 'BLAST', 'BLD', 'BLUR', 'BLZ', 'BNB', 'BNT', 'BNX', 'BOBA', 'BOME', 'BOND', 'BONK', 'BORA', 'BOSON', 'BRD', 'BRZ', 'BSW', 'BTG', 'BTS', 'BTT', 'BURGER', 'C98', 'CAKE', 'CATI', 'CELO', 'CELR', 'CFG', 'CFX', 'CHESS', 'CHR', 'CHZ', 'CITY', 'CKB', 'CLV', 'CMC', 'COCOS', 'COMBO', 'COMP', 'CONV', 'COTI', 'COW', 'CREAM', 'CRO', 'CRU', 'CRV', 'CTK', 'CTSI', 'CTXC', 'CVC', 'CVX', 'CYBER', 'DAR', 'DASH', 'DATA', 'DCR', 'DEEP', 'DEGO', 'DENT', 'DEP', 'DERC', 'DEXE', 'DF', 'DGB', 'DIA', 'DIGG', 'DOCK', 'DODO', 'DOGE', 'DOT', 'DREP', 'DUSK', 'DVPN', 'DYDX', 'DYM', 'EDU', 'EGLD', 'EIGEN', 'ELF', 'ENA', 'ENJ', 'ENS', 'EPS', 'EPX', 'ERG', 'ERN', 'ETC', 'ETH', 'ETHFI', 'EVMOS', 'EWT', 'FARM', 'FET', 'FEVR', 'FIDA', 'FIL', 'FIS', 'FLM', 'FLOKI', 'FLOW', 'FNB', 'FOR', 'FRONT', 'FTM', 'FTN', 'FUEL', 'FXS', 'GAFI', 'GALA', 'GARI', 'GHST', 'GLM', 'GLMR', 'GMX', 'GNO', 'GNS', 'GNX', 'GOAT', 'GODS', 'GRT', 'GST', 'GT', 'GUILD', 'HARD', 'HBAR', 'HEGIC', 'HIFI', 'HIGH', 'HIVE', 'HNT', 'HOT', 'HT', 'HYPE', 'HYPER', 'ICP', 'ICX', 'ILV', 'IMX', 'INDEX', 'INIT', 'INJ', 'INTER', 'IO', 'IOTA', 'IOTX', 'IQ', 'IRIS', 'IXS', 'JAM', 'JASMY', 'JONES', 'JST', 'JTO', 'JUNO', 'JUP', 'JUV', 'KAITO', 'KAR', 'KAS', 'KAVA', 'KCS', 'KEY', 'KIN', 'KINT', 'KITE', 'KLAY', 'KRL', 'KSM', 'KUB', 'KUJI', 'KWENTA', 'LAT', 'LAZIO', 'LBC', 'LBR', 'LCX', 'LDO', 'LEVER', 'LINA', 'LINK', 'LISTA', 'LIT', 'LOKA', 'LOOKS', 'LPT', 'LQTY', 'LRC', 'LSK', 'LTC', 'LTO', 'LYRA', 'MAGIC', 'MANA', 'MANTA', 'MAPLE', 'MAV', 'MAVIA', 'MBOX', 'MC', 'MCB', 'MDT', 'MDX', 'MEDIA', 'MEME', 'MERLIN', 'METIS', 'MEW', 'MINA', 'MKR', 'MOD', 'MON', 'MORPHO', 'MOVE', 'MOVR', 'MTL', 'MV', 'MX', 'MXC', 'MYRO', 'NAVI', 'NCT', 'NEAR', 'NEIRO', 'NEO', 'NEST', 'NEXO', 'NFT', 'NFTX', 'NGM', 'NIM', 'NKN', 'NMR', 'NOIA', 'NOM', 'NOT', 'NULS', 'OCEAN', 'OCN', 'OG', 'OGN', 'OHM', 'OKB', 'OLT', 'OM', 'OMNI', 'ONDO', 'ONE', 'ONT', 'ONX', 'OP', 'OPUL', 'ORAI', 'ORCA', 'ORDI', 'ORN', 'OSMO', 'OXT', 'PAL', 'PDEX', 'PENDLE', 'PENGU', 'PEOPLE', 'PEPE', 'PERP', 'PHA', 'PHTR', 'PICA', 'PIX', 'PIXEL', 'PIXELS', 'PLT', 'PNK', 'PNUT', 'POL', 'POLIS', 'POLK', 'POLS', 'POLY', 'POND', 'POPCAT', 'PORTAL', 'PORTO', 'POWR', 'PRIME', 'PROM', 'PROS', 'PROVE', 'PSG', 'PUSH', 'PYR', 'PYTH', 'QI', 'QSP', 'QTUM', 'QUICK', 'RAI', 'RALLY', 'RARE', 'RAY', 'RDNT', 'RED', 'REEF', 'REGEN', 'REN', 'RENDER', 'REVV', 'REZ', 'RGP', 'RIA', 'RLC', 'RLY', 'RMRK', 'ROBO', 'ROSE', 'RPL', 'RUNE', 'RVF', 'RVN', 'SAFE', 'SAGA', 'SAMO', 'SAND', 'SANTOS', 'SC', 'SCROLL', 'SCRT', 'SDL', 'SEI', 'SFP', 'SFUND', 'SHIB', 'SHR', 'SIA', 'SIGN', 'SKILL', 'SKL', 'SLERF', 'SLIM', 'SLP', 'SLRS', 'SNC', 'SNX', 'SOI', 'SOL', 'SOUL', 'SPELL', 'SPK', 'SPS', 'SRK', 'SRM', 'STAFI', 'STARL', 'STARS', 'STMX', 'STORJ', 'STPT', 'STRD', 'STRK', 'STX', 'SUB', 'SUI', 'SUKU', 'SUN', 'SUPER', 'SURV', 'SUSHI', 'SWEAT', 'SWINGBY', 'SWISE', 'SXP', 'SYLO', 'SYN', 'SYNTHR', 'SYS', 'TAIKO', 'TAO', 'TCG', 'TEER', 'TELOS', 'TFUEL', 'THETA', 'TIA', 'TIME', 'TKING', 'TKO', 'TLM', 'TLOS', 'TNSR', 'TOMO', 'TON', 'TORN', 'TOSHI', 'TOWER', 'TPT', 'TRAC', 'TRB', 'TRIAS', 'TRIBE', 'TRIG', 'TROY', 'TRU', 'TRUMP', 'TRVL', 'TRX', 'TURBO', 'TVK', 'TWT', 'UFARM', 'UFT', 'ULTRA', 'UMA', 'UNFI', 'UNI', 'UNIBOT', 'USUAL', 'UTK', 'UXLINK', 'VEED', 'VELO', 'VET', 'VIDT', 'VIRTUAL', 'VITE', 'VLX', 'VOXEL', 'VRA', 'W', 'WAL', 'WAN', 'WAVES', 'WAXP', 'WEMIX', 'WET', 'WIF', 'WIN', 'WING', 'WINK', 'WLD', 'WOM', 'WRX', 'XCAD', 'XED', 'XEM', 'XFT', 'XGT', 'XLM', 'XMR', 'XNL', 'XNO', 'XPR', 'XPRT', 'XRP', 'XTZ', 'XVG', 'YFI', 'YGG', 'YLD', 'ZEC', 'ZEN', 'ZETA', 'ZIL', 'ZIRCUIT', 'ZK', 'ZORA', 'ZRO'];
 
@@ -982,7 +982,8 @@ function fetchBybitRest(){
     });
 }
 function fetchGateRest(){
-  return withTimeout(fetch('https://api.gateio.ws/api/v4/spot/tickers',{cache:'no-store'}),9000)
+  return withTimeout(
+    fetch((CORS_PROXY?CORS_PROXY+'?url='+encodeURIComponent('https://api.gateio.ws/api/v4/spot/tickers'):'https://api.gateio.ws/api/v4/spot/tickers'),{cache:'no-store'}),9000)
     .then(function(r){return r.json();}).then(function(list){
       var o={};
       list.forEach(function(t){
@@ -1055,7 +1056,8 @@ function fetchKucoinRest(){
     });
 }
 function fetchHtxRest(){
-  return withTimeout(fetch('https://api.huobi.pro/market/tickers',{cache:'no-store'}),9000)
+  return withTimeout(
+    fetch((CORS_PROXY?CORS_PROXY+'?url='+encodeURIComponent('https://api.huobi.pro/market/tickers'):'https://api.huobi.pro/market/tickers'),{cache:'no-store'}),9000)
     .then(function(r){return r.json();}).then(function(d){
       var o={};
       (d.data||[]).forEach(function(t){
@@ -1115,11 +1117,13 @@ function fetchAllPrices(){
   var batches = [
     runBatch('binance', fetchBinanceRest),
     runBatch('bybit',   fetchBybitRest),
-    runBatch('gate',    fetchGateRest),
-    runBatch('htx',     fetchHtxRest),
     runBatch('bitget',  fetchBitgetRest),
   ];
+  // Gate și HTX funcționează fără proxy DAR blochează din GitHub Pages
+  // → folosim proxy dacă e disponibil
   if(CORS_PROXY){
+    batches.push(runBatch('gate',   fetchGateRest));
+    batches.push(runBatch('htx',    fetchHtxRest));
     batches.push(runBatch('mexc',   fetchMexcRest));
     batches.push(runBatch('kucoin', fetchKucoinRest));
     batches.push(runBatch('bingx',  fetchBingxRest));
