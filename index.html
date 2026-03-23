@@ -567,6 +567,29 @@ function setStatus(st){
 // ═══════════════════════════════════════════
 // WEBSOCKET FEEDS
 // ═══════════════════════════════════════════
+
+// ════════════════════════════════════
+// WEBSOCKET CORE
+// ════════════════════════════════════
+function wsConnect(name, url, onOpen, onMsg, reconnectDelay){
+  try{
+    var ws = new WebSocket(url);
+    WS_CONNS[name] = ws;
+    ws.onopen = function(){ updateExDot(name,'live'); if(onOpen) onOpen(ws); };
+    ws.onmessage = function(e){
+      try{ onMsg(JSON.parse(e.data)); }catch(err){}
+    };
+    ws.onerror = function(){ updateExDot(name,'error'); };
+    ws.onclose = function(){
+      updateExDot(name,'error');
+      WS_CONNS[name] = null;
+      if(S.running) setTimeout(function(){ wsConnect(name,url,onOpen,onMsg,reconnectDelay); }, reconnectDelay||6000);
+    };
+    return ws;
+  }catch(e){ updateExDot(name,'error'); return null; }
+}
+
+
 function startWS_Binance(){
   var allSubs=COINS.map(function(c){return c.toLowerCase()+'usdt@depth5@100ms';});
   var chunks=[];for(var i=0;i<allSubs.length;i+=50)chunks.push(allSubs.slice(i,i+50));
