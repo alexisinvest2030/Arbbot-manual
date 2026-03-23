@@ -1,95 +1,11 @@
-<
-
-// ═══════════════════════════════════════════
-// CORS PROXY MODAL
-// ═══════════════════════════════════════════
-function openProxyModal(){
-  var modal=document.getElementById('proxy-modal');
-  var input=document.getElementById('proxy-input');
-  modal.style.display='flex';
-  input.value=CORS_PROXY||'';
-  updateProxyStatus();
-}
-function closeProxyModal(){
-  document.getElementById('proxy-modal').style.display='none';
-}
-function updateProxyStatus(){
-  var input=document.getElementById('proxy-input');
-  var status=document.getElementById('proxy-status');
-  var val=(input.value||'').trim();
-  if(!val){
-    status.innerHTML='<span style="color:var(--text3)">⚪ Fără proxy — KuCoin/BitMart/HTX vor fi sărite</span>';
-  } else if(val.startsWith('https://')){
-    status.innerHTML='<span style="color:var(--yellow)">⏳ Introdu URL-ul și apasă Testează sau Salvează</span>';
-  } else {
-    status.innerHTML='<span style="color:var(--red)">⚠ URL invalid — trebuie să înceapă cu https://</span>';
-  }
-}
-function saveProxy(){
-  var input=document.getElementById('proxy-input');
-  var val=(input.value||'').trim().replace(/\/$/,''); // remove trailing slash
-  CORS_PROXY=val;
-  try{ localStorage.setItem('arb_cors_proxy',val); }catch(e){}
-  updateProxyBtn();
-  closeProxyModal();
-  if(val) xlog('✓ CORS Proxy salvat: '+val,'ok');
-  else xlog('CORS Proxy șters — KuCoin/HTX/BitMart dezactivate','warn');
-}
-function testProxy(){
-  var input=document.getElementById('proxy-input');
-  var status=document.getElementById('proxy-status');
-  var val=(input.value||'').trim().replace(/\/$/,'');
-  if(!val||!val.startsWith('https://')){
-    status.innerHTML='<span style="color:var(--red)">⚠ URL invalid</span>';
-    return;
-  }
-  status.innerHTML='<span style="color:var(--yellow)">⏳ Testez conexiunea...</span>';
-  var testUrl=val+'?url='+encodeURIComponent('https://api.binance.com/api/v3/ping');
-  fetch(testUrl,{cache:'no-store'})
-    .then(function(r){return r.json();})
-    .then(function(d){
-      status.innerHTML='<span style="color:var(--green)">✓ Proxy funcționează! Răspuns: '+JSON.stringify(d).slice(0,50)+'</span>';
-    })
-    .catch(function(e){
-      status.innerHTML='<span style="color:var(--red)">✗ Eroare: '+e.message+'</span>';
-    });
-}
-function updateProxyBtn(){
-  var btn=document.getElementById('proxy-btn');
-  if(!btn)return;
-  if(CORS_PROXY){
-    btn.style.background='var(--green)';
-    btn.style.color='#000';
-    btn.style.borderColor='var(--green)';
-    btn.textContent='⚡ PROXY ON';
-  } else {
-    btn.style.background='transparent';
-    btn.style.color='var(--text3)';
-    btn.style.borderColor='var(--border)';
-    btn.textContent='⚡ PROXY';
-  }
-}
-// Close modal on backdrop click
-document.addEventListener('DOMContentLoaded',function(){
-  document.getElementById('proxy-modal').addEventListener('click',function(e){
-    if(e.target===this)closeProxyModal();
-  });
-  // Populate input with saved value
-  var saved=CORS_PROXY;
-  if(saved){
-    var inp=document.getElementById('proxy-input');
-    if(inp)inp.value=saved;
-  }
-  updateProxyBtn();
-});
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
-<title>ArbBot Manual v2.1</title>
+<title>ArbBot Manual v1.0</title>
 <style>
 :root{
   --bg:#03080f;--bg2:#060e1c;--bg3:#091425;
@@ -98,47 +14,90 @@ document.addEventListener('DOMContentLoaded',function(){
   --yellow:#f5c842;--yellow2:rgba(245,200,66,.1);
   --red:#ff4466;--red2:rgba(255,68,102,.1);
   --blue:#4da6ff;--blue2:rgba(77,166,255,.1);
+  --purple:#b06aff;--purple2:rgba(176,106,255,.1);
   --text:#c8ddf0;--text2:#6a8aaa;--text3:#3a5570;
   --r:5px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px;min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background:linear-gradient(rgba(0,255,136,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,.015) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+
+/* GRID BG */
+body::before{content:'';position:fixed;inset:0;background:
+  linear-gradient(rgba(0,255,136,.015) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,255,136,.015) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0}
 body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(0,255,136,.04),transparent);pointer-events:none;z-index:0}
-#app{position:relative;z-index:1;padding:10px;max-width:1700px;margin:0 auto}
-#header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);margin-bottom:8px;flex-wrap:wrap}
-.logo-text{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:var(--green);letter-spacing:2px;text-shadow:0 0 20px rgba(0,255,136,.4)}
-.logo-sub{font-size:8px;color:var(--text3);letter-spacing:2px;margin-top:-2px}
-.status-pill{display:flex;align-items:center;gap:5px;padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;font-size:8px}
-.sdot{width:7px;height:7px;border-radius:50%;background:#2a3a55;flex-shrink:0;transition:.3s}
+
+#app{position:relative;z-index:1;padding:10px;max-width:1600px;margin:0 auto}
+
+/* ── HEADER ── */
+#header{display:flex;align-items:center;gap:12px;padding:10px 16px;
+  background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);
+  margin-bottom:8px;flex-wrap:wrap}
+.logo-text{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;
+  color:var(--green);letter-spacing:2px;text-shadow:0 0 20px rgba(0,255,136,.4)}
+.logo-sub{font-size:8px;color:var(--text3);letter-spacing:3px;margin-top:-2px}
+.status-pill{display:flex;align-items:center;gap:5px;padding:4px 10px;
+  background:var(--bg3);border:1px solid var(--border);border-radius:20px;font-size:8px}
+.sdot{width:7px;height:7px;border-radius:50%;background:#2a3a55;flex-shrink:0}
 .sdot.scan{background:var(--yellow);box-shadow:0 0 8px var(--yellow)}
 .sdot.ok{background:var(--green);box-shadow:0 0 8px var(--green)}
-#btn-start{margin-left:auto;padding:7px 22px;font-size:13px;font-weight:700;cursor:pointer;background:var(--green3);border:1px solid var(--green);border-radius:var(--r);color:var(--green);transition:.2s;font-family:'JetBrains Mono',monospace;letter-spacing:1px}
+.sdot.idle{background:#2a3a55}
+#btn-start{margin-left:auto;padding:7px 22px;font-family:'Rajdhani',sans-serif;
+  font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;
+  background:var(--green3);border:1px solid var(--green);border-radius:var(--r);
+  color:var(--green);transition:.2s;font-family:'JetBrains Mono',monospace}
 #btn-start:hover{background:var(--green2);box-shadow:0 0 20px rgba(0,255,136,.2)}
 #btn-start.stop{background:var(--red2);border-color:var(--red);color:var(--red)}
-#stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:6px;margin-bottom:8px}
-.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:8px 12px;position:relative;overflow:hidden}
-.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,136,.3),transparent)}
+#btn-start.stop:hover{box-shadow:0 0 20px rgba(255,68,102,.2)}
+
+/* ── STATS BAR ── */
+#stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px;margin-bottom:8px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  padding:8px 12px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,255,136,.3),transparent)}
 .stat-lbl{font-size:7px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
 .stat-val{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--text);line-height:1}
 .stat-val.green{color:var(--green);text-shadow:0 0 15px rgba(0,255,136,.3)}
 .stat-val.yellow{color:var(--yellow)}
 .stat-val.blue{color:var(--blue)}
-#speed-bar{display:flex;align-items:center;gap:5px;margin-bottom:8px;flex-wrap:wrap;padding:6px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r)}
-.spd{background:var(--bg3);border:1px solid var(--border);border-radius:3px;color:var(--text3);font-size:8px;padding:3px 9px;cursor:pointer;font-family:inherit;transition:.15s}
+
+/* ── SPEED ── */
+#speed-bar{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;padding:6px 10px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r)}
+.spd{background:var(--bg3);border:1px solid var(--border);border-radius:3px;
+  color:var(--text3);font-size:8px;padding:3px 9px;cursor:pointer;font-family:inherit;transition:.15s}
 .spd:hover,.spd.active{border-color:var(--green);color:var(--green)}
-.qfilt{background:var(--bg3);border:1px solid var(--border);border-radius:3px;color:var(--text3);font-size:8px;padding:3px 9px;cursor:pointer;font-family:inherit;transition:.15s}
+.qfilt{background:var(--bg3);border:1px solid var(--border);border-radius:3px;
+  color:var(--text3);font-size:8px;padding:3px 9px;cursor:pointer;font-family:inherit;transition:.15s}
 .qfilt.on{border-color:var(--blue);color:var(--blue)}
-.sep{color:var(--border2);margin:0 3px}
-#main{display:grid;grid-template-columns:1fr 355px;gap:8px}
-@media(max-width:960px){#main{grid-template-columns:1fr}}
+.sep{color:var(--border2);margin:0 4px}
+
+/* ── MAIN GRID ── */
+#main{display:grid;grid-template-columns:1fr 340px;gap:8px}
+@media(max-width:900px){#main{grid-template-columns:1fr}}
+
+/* ── PANEL ── */
 .panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
-.panel-hdr{padding:8px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:var(--bg3)}
-.panel-title{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;color:var(--green)}
+.panel-hdr{padding:8px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;
+  background:var(--bg3)}
+.panel-title{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;
+  letter-spacing:1px;color:var(--green)}
+.badge{font-size:7px;padding:2px 6px;border-radius:10px;border:1px solid}
+.badge-green{border-color:rgba(0,255,136,.3);color:var(--green);background:var(--green3)}
+.badge-yellow{border-color:rgba(245,200,66,.3);color:var(--yellow);background:var(--yellow2)}
+.badge-red{border-color:rgba(255,68,102,.3);color:var(--red);background:var(--red2)}
+.badge-blue{border-color:rgba(77,166,255,.3);color:var(--blue);background:var(--blue2)}
+.badge-purple{border-color:rgba(176,106,255,.3);color:var(--purple);background:var(--purple2)}
+
+/* ── OPPORTUNITY CARDS ── */
 #opp-list{padding:8px;display:flex;flex-direction:column;gap:5px;min-height:200px}
 .opp-empty{padding:40px;text-align:center;color:var(--text3);font-size:10px}
 .opp-empty .big{font-family:'Rajdhani',sans-serif;font-size:28px;color:var(--border2);display:block;margin-bottom:6px}
-.opp{border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;background:var(--bg3);position:relative;overflow:hidden;cursor:pointer;transition:.2s}
+
+.opp{border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;
+  background:var(--bg3);position:relative;overflow:hidden;cursor:pointer;transition:.2s}
 .opp:hover{border-color:var(--border2)}
 .opp::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
 .opp.safe::before{background:var(--green)}
@@ -147,149 +106,188 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .opp.safe{border-color:rgba(0,255,136,.15)}
 .opp.med{border-color:rgba(245,200,66,.15)}
 .opp.risky{border-color:rgba(255,68,102,.15)}
-.opp.NEW{animation:newOpp .4s ease}
+.opp.NEW{animation:newOpp .5s ease}
 @keyframes newOpp{0%{transform:scaleX(.97);opacity:.5}100%{transform:scaleX(1);opacity:1}}
+
 .opp-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
 .opp-coin{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:var(--text)}
+.opp-spread{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--green)}
+.opp-spread.med{color:var(--yellow)}
+.opp.risky .opp-spread{color:var(--red)}
+
 .opp-route{display:grid;grid-template-columns:1fr auto 1fr;gap:5px;align-items:center;margin-bottom:7px}
 .opp-ex{padding:5px 8px;border-radius:3px;text-align:center}
 .opp-ex .ex-action{font-size:7px;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;opacity:.7}
 .opp-ex .ex-name{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700}
 .opp-ex .ex-price{font-size:8px;color:var(--text2);margin-top:1px}
 .opp-ex.buy{background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.2)}
+.opp-ex .ex-name.buy{color:var(--green)}
 .opp-ex.sell{background:rgba(255,68,102,.06);border:1px solid rgba(255,68,102,.2)}
-.opp-meta{display:flex;justify-content:space-between;font-size:7px;color:var(--text3);padding-top:6px;border-top:1px solid var(--border)}
-.opp-profit.pos{color:var(--green);font-size:8px;font-weight:700}
-.opp-profit.neg{color:var(--red);font-size:8px;font-weight:700}
+.opp-ex .ex-name.sell{color:var(--red)}
+.opp-arrow{color:var(--text3);font-size:14px}
+
+.opp-meta{display:flex;justify-content:space-between;font-size:7px;color:var(--text3);
+  padding-top:6px;border-top:1px solid var(--border)}
+.opp-profit{font-size:8px;font-weight:700}
+.opp-profit.pos{color:var(--green)}
+.opp-profit.neg{color:var(--red)}
+
+/* ── INSTRUCTION PANEL ── */
 #instr-panel{display:flex;flex-direction:column;gap:8px}
 .instr-empty{padding:30px 20px;text-align:center;color:var(--text3);font-size:9px}
 #selected-opp{display:none}
 #selected-opp.show{display:block}
+
 .instr-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
-.instr-hdr{padding:8px 12px;background:var(--bg3);border-bottom:1px solid var(--border);font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--green);letter-spacing:1px}
+.instr-hdr{padding:8px 12px;background:var(--bg3);border-bottom:1px solid var(--border);
+  font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--green);
+  letter-spacing:1px}
 .instr-body{padding:12px}
+
 .step{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start}
 .step:last-child{margin-bottom:0}
-.step-num{width:22px;height:22px;border-radius:50%;border:1px solid var(--green);color:var(--green);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-num{width:22px;height:22px;border-radius:50%;border:1px solid var(--green);
+  color:var(--green);font-size:9px;font-weight:700;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;margin-top:1px}
 .step-content .step-title{font-size:9px;font-weight:700;color:var(--text);margin-bottom:3px}
 .step-content .step-detail{font-size:8px;color:var(--text2);line-height:1.6}
-.step-content .step-val{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--yellow);margin-top:2px;line-height:1.5}
-.step-content .step-link{color:var(--blue);text-decoration:none;font-size:7px;padding:2px 6px;border:1px solid rgba(77,166,255,.3);border-radius:2px;display:inline-block;margin-top:3px}
+.step-content .step-val{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;
+  color:var(--yellow);margin-top:2px}
+.step-content .step-link{color:var(--blue);text-decoration:none;font-size:7px;
+  padding:2px 6px;border:1px solid rgba(77,166,255,.3);border-radius:2px;display:inline-block;margin-top:3px}
 .step-content .step-link:hover{background:var(--blue2)}
+
 .alert-box{padding:8px 10px;border-radius:3px;font-size:8px;line-height:1.7;margin-top:6px}
-.alert-box.warn{background:rgba(245,200,66,.1);border:1px solid rgba(245,200,66,.3);color:var(--yellow)}
+.alert-box.warn{background:var(--yellow2);border:1px solid rgba(245,200,66,.3);color:var(--yellow)}
 .alert-box.info{background:var(--blue2);border:1px solid rgba(77,166,255,.3);color:var(--blue)}
 .alert-box.danger{background:var(--red2);border:1px solid rgba(255,68,102,.3);color:var(--red)}
-#ex-status{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:4px;padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r)}
-.ex-dot{padding:4px 5px;text-align:center;border-radius:3px;border:1px solid var(--border);font-size:6.5px;color:var(--text3);transition:.3s;position:relative;line-height:1.6}
-.ex-dot .ex-mode{font-size:5px;opacity:.5;display:block}
+
+/* ── EXCHANGE STATUS ── */
+#ex-status{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:4px;
+  padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r)}
+.ex-dot{padding:4px 6px;text-align:center;border-radius:3px;border:1px solid var(--border);
+  font-size:7px;color:var(--text3);transition:.3s}
 .ex-dot.live{border-color:rgba(0,255,136,.3);color:var(--green);background:var(--green3)}
-.ex-dot.live .ex-mode{opacity:.7}
-.ex-dot.error{border-color:rgba(255,68,102,.15);color:#553344}
-#loglist{max-height:160px;overflow-y:auto;padding:6px 10px;display:flex;flex-direction:column-reverse;gap:2px}
+.ex-dot.error{border-color:rgba(255,68,102,.2);color:#553344}
+
+/* ── LOG ── */
+#loglist{max-height:200px;overflow-y:auto;padding:6px 10px;display:flex;flex-direction:column-reverse;gap:2px}
 .log-e{font-size:7px;padding:1px 4px;border-left:2px solid var(--border);color:var(--text3)}
 .log-e.ok{border-color:var(--green);color:rgba(0,255,136,.7)}
 .log-e.warn{border-color:var(--yellow);color:rgba(245,200,66,.7)}
 .log-e.fail{border-color:var(--red);color:rgba(255,68,102,.7)}
 .log-e.info{border-color:var(--blue);color:rgba(77,166,255,.7)}
+
+/* TIMER RING */
+.timer-ring{display:inline-block;width:28px;height:28px;position:relative}
+.timer-ring svg{transform:rotate(-90deg)}
+.timer-ring circle{fill:none;stroke:var(--border2);stroke-width:2}
+.timer-ring circle.prog{stroke:var(--green);transition:stroke-dashoffset .1s linear}
+
+/* PROFIT MINI CHART */
+#profit-chart{height:30px;margin-top:3px}
+
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pulsing{animation:pulse 1.5s infinite}
+
+/* COMPARE TABLE */
 .cmp-table{width:100%;border-collapse:collapse;font-size:8px;margin-top:4px}
 .cmp-table th{text-align:left;color:var(--text3);padding:3px 5px;border-bottom:1px solid var(--border);font-weight:400}
 .cmp-table td{padding:4px 5px;border-bottom:1px solid rgba(14,31,53,.5)}
 .cmp-table tr.best td{background:rgba(0,255,136,.04)}
-.quick-link{display:block;padding:5px 8px;margin-bottom:3px;border:1px solid var(--border);border-radius:3px;color:var(--text);text-decoration:none;font-size:9px;transition:.2s}
-.quick-link:hover{border-color:var(--blue);background:var(--blue2)}
-.quick-link .ql-name{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700}
-.quick-link .ql-url{color:var(--text3);font-size:6.5px}
-.refresh-btn{margin-left:auto;padding:2px 8px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--text3);font-size:7px;cursor:pointer;font-family:inherit}
-.refresh-btn:hover{border-color:var(--green);color:var(--green)}
-#sound-btn{padding:3px 8px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--text3);font-size:8px;cursor:pointer;font-family:inherit}
-#sound-btn.on{border-color:var(--green);color:var(--green)}
-::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.cmp-table tr.best td:first-child{color:var(--green);font-weight:700}
 
-/* ── TICKER BAR ── */
-#ticker-wrap{
-  width:100%;overflow:hidden;background:var(--bg2);
-  border:1px solid var(--border2);border-radius:var(--r);
-  margin-bottom:8px;padding:0;height:32px;position:relative;
-  display:none; /* hidden until scan starts */
-}
-#ticker-wrap.active{display:block;}
-#ticker-wrap::before,#ticker-wrap::after{
-  content:'';position:absolute;top:0;bottom:0;width:40px;z-index:2;pointer-events:none;
-}
-#ticker-wrap::before{left:0;background:linear-gradient(90deg,var(--bg2),transparent);}
-#ticker-wrap::after{right:0;background:linear-gradient(-90deg,var(--bg2),transparent);}
-#ticker-track{
-  display:flex;align-items:center;gap:0;
-  height:32px;white-space:nowrap;
-  animation:ticker-scroll 60s linear infinite;
-  will-change:transform;
-}
-#ticker-track:hover{animation-play-state:paused;}
-@keyframes ticker-scroll{
-  0%{transform:translateX(0);}
-  100%{transform:translateX(-50%);}
-}
-.t-item{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:0 14px;height:32px;cursor:pointer;
-  border-right:1px solid var(--border);
-  transition:background .15s;flex-shrink:0;
-}
-.t-item:hover{background:rgba(0,255,136,.06);}
-.t-item.safe .t-spread{color:var(--green);text-shadow:0 0 8px rgba(0,255,136,.5);}
-.t-item.med .t-spread{color:var(--yellow);}
-.t-item.risky .t-spread{color:var(--red);}
-.t-coin{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:#fff;}
-.t-route{font-size:7px;color:var(--text3);}
-.t-spread{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;}
-.t-profit{font-size:7px;color:var(--text2);}
-.t-badge{font-size:6px;padding:1px 4px;border-radius:3px;background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.2);}
-.t-sep{color:var(--border2);font-size:18px;padding:0 4px;user-select:none;}
-#ticker-label{
-  position:absolute;left:8px;top:50%;transform:translateY(-50%);
-  font-size:7px;color:var(--text3);letter-spacing:1px;z-index:3;
-  background:var(--bg2);padding:0 6px;
-}
-#ticker-empty{
-  display:flex;align-items:center;justify-content:center;
-  height:32px;font-size:8px;color:var(--text3);letter-spacing:1px;
-}
+/* MODAL for quick links */
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;align-items:center;justify-content:center}
+#modal.show{display:flex}
+#modal-box{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;
+  padding:20px;width:340px;max-width:90vw}
+.modal-title{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:var(--green);margin-bottom:12px}
+.quick-link{display:block;padding:8px 12px;margin-bottom:6px;border:1px solid var(--border);
+  border-radius:4px;color:var(--text);text-decoration:none;font-size:9px;transition:.2s}
+.quick-link:hover{border-color:var(--blue);background:var(--blue2)}
+.quick-link .ql-name{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700}
+.quick-link .ql-url{color:var(--text3);font-size:7px}
+#modal-close{margin-top:10px;width:100%;padding:6px;background:transparent;border:1px solid var(--border);
+  border-radius:3px;color:var(--text2);cursor:pointer;font-family:inherit;font-size:9px}
+#modal-close:hover{border-color:var(--red);color:var(--red)}
+
+.refresh-btn{margin-left:auto;padding:2px 8px;background:transparent;border:1px solid var(--border);
+  border-radius:3px;color:var(--text3);font-size:7px;cursor:pointer;font-family:inherit}
+.refresh-btn:hover{border-color:var(--green);color:var(--green)}
+
+/* Sound toggle */
+#sound-btn{padding:3px 8px;background:transparent;border:1px solid var(--border);border-radius:3px;
+  color:var(--text3);font-size:8px;cursor:pointer;font-family:inherit}
+#sound-btn.on{border-color:var(--green);color:var(--green)}
+
+#ticker-wrap{display:none}
+#ticker-wrap.active{display:flex}
+@keyframes ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 </style>
 </head>
 <body>
 <div id="app">
 
+<!-- HEADER -->
 <div id="header">
   <div>
     <div class="logo-text">▲ ARB<span style="color:#fff;opacity:.4">BOT</span> MANUAL</div>
-    <div class="logo-sub">SCANNER ARB · EXECUȚIE MANUALĂ · ZERO API · 14 EXCHANGE · 0.5s</div>
+    <div class="logo-sub">SCANNER ARBITRAJ · EXECUȚIE MANUALĂ · ZERO API</div>
   </div>
-  <div class="status-pill"><div class="sdot idle" id="sdot"></div><span id="stxt" style="color:var(--text3)">idle</span></div>
-  <div class="status-pill"><span id="lupd" style="font-size:7px;color:var(--text3)">—</span></div>
-  <button id="sound-btn" onclick="toggleSound()">🔇</button>
+  <div class="status-pill">
+    <div class="sdot idle" id="sdot"></div>
+    <span id="stxt" style="color:var(--text3)">idle</span>
+  </div>
+  <div class="status-pill" id="cors-info" style="display:none">
+    <span id="cors-lbl" style="font-size:7px;color:var(--text3)">CORS: testare...</span>
+  </div>
+  <div class="status-pill">
+    <span id="lupd" style="font-size:7px;color:var(--text3)">—</span>
+  </div>
+  <button id="sound-btn" onclick="toggleSound()">??</button>
   <button id="btn-start">▶ START SCAN</button>
 </div>
 
+<!-- STATS -->
 <div id="stats">
-  <div class="stat-card"><div class="stat-lbl">OPORTUNITĂȚI</div><div class="stat-val yellow" id="s-opps">0</div></div>
-  <div class="stat-card"><div class="stat-lbl">SCANS</div><div class="stat-val blue" id="s-scans">0</div></div>
-  <div class="stat-card"><div class="stat-lbl">BEST SPREAD</div><div class="stat-val green" id="s-best">—</div></div>
-  <div class="stat-card"><div class="stat-lbl">LATENȚĂ AVG</div><div class="stat-val" id="s-lat">—</div></div>
-  <div class="stat-card"><div class="stat-lbl">EXCHANGE LIVE</div><div class="stat-val green" id="s-ex">0 / 13</div></div>
-  <div class="stat-card"><div class="stat-lbl">INTERVAL SCAN</div><div class="stat-val yellow" id="s-speed">0.5s</div></div>
+  <div class="stat-card">
+    <div class="stat-lbl">OPORTUNITĂȚI</div>
+    <div class="stat-val yellow" id="s-opps">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-lbl">SCANS</div>
+    <div class="stat-val blue" id="s-scans">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-lbl">BEST SPREAD</div>
+    <div class="stat-val green" id="s-best">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-lbl">LATENȚĂ AVG</div>
+    <div class="stat-val" id="s-lat">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-lbl">EXCHANGE-URI LIVE</div>
+    <div class="stat-val green" id="s-ex">0 / 11</div>
+  </div>
 </div>
 
+<!-- SPEED + FILTERS -->
 <div id="speed-bar">
   <span style="color:var(--text3);font-size:8px">VITEZĂ:</span>
-  <button class="spd active" data-ms="500">0.5s</button>
   <button class="spd" data-ms="1000">1s</button>
-  <button class="spd" data-ms="2000">2s</button>
+  <button class="spd active" data-ms="2000">2s</button>
   <button class="spd" data-ms="5000">5s</button>
+  <button class="spd" data-ms="10000">10s</button>
   <span class="sep">│</span>
   <span style="color:var(--text3);font-size:8px">MIN SPREAD:</span>
-  <button class="spd active" data-spr="0.1">0.1%</button>
-  <button class="spd" data-spr="0.2">0.2%</button>
+  <button class="spd" data-spr="0.1">0.1%</button>
+  <button class="spd active" data-spr="0.2">0.2%</button>
   <button class="spd" data-spr="0.3">0.3%</button>
   <button class="spd" data-spr="0.5">0.5%</button>
   <span class="sep">│</span>
@@ -303,414 +301,280 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
   <input type="range" id="size-r" min="10" max="5000" step="10" value="100"
     style="width:80px;accent-color:var(--green);vertical-align:middle"
     oninput="document.getElementById('size-lbl').textContent=this.value;TRADE_SIZE=+this.value">
-  <span class="sep">│</span>
+  <span style="color:var(--text3);font-size:9px;margin-left:4px">│</span>
   <button id="proxy-btn" onclick="openProxyModal()"
-    style="font-size:8px;padding:3px 8px;border-radius:4px;border:1px solid;cursor:pointer;font-family:inherit;transition:.2s"
-    title="Configurează CORS Proxy pentru KuCoin/BitMart/HTX">
-    ⚡ PROXY
-  </button>
+    style="font-size:8px;padding:3px 8px;border-radius:4px;border:1px solid var(--border);cursor:pointer;font-family:inherit;background:transparent;color:var(--text3);transition:.2s"
+    title="CORS Proxy pentru KuCoin/HTX/BitMart">⚡ PROXY</button>
 </div>
 
 <!-- PROXY MODAL -->
-<div id="proxy-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;align-items:center;justify-content:center">
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:24px;width:480px;max-width:90vw">
-    <div style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:var(--green);margin-bottom:4px">⚡ CORS Proxy Config</div>
-    <div style="font-size:10px;color:var(--text3);margin-bottom:16px">Necesar pentru KuCoin, BitMart, HTX, MEXC (blochează CORS din browser)</div>
-    
-    <div style="font-size:10px;color:var(--text2);margin-bottom:6px">URL Worker Cloudflare:</div>
+<div id="proxy-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#1a1a2e;border:1px solid #333;border-radius:10px;padding:24px;width:460px;max-width:92vw">
+    <div style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:#00ff88;margin-bottom:4px">⚡ CORS Proxy Config</div>
+    <div style="font-size:10px;color:#666;margin-bottom:14px">Necesar pentru KuCoin, HTX, BitMart (blochează CORS din browser)</div>
+    <div style="font-size:10px;color:#aaa;margin-bottom:5px">URL Cloudflare Worker:</div>
     <input id="proxy-input" type="text" placeholder="https://arb-proxy.yourname.workers.dev"
-      style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 10px;color:var(--text1);font-family:monospace;font-size:11px;outline:none"
-      oninput="updateProxyStatus()">
-    
-    <div id="proxy-status" style="font-size:10px;margin-top:8px;min-height:16px"></div>
-    
-    <div style="font-size:9px;color:var(--text3);margin-top:12px;padding:8px;background:var(--bg3);border-radius:4px;line-height:1.8">
-      <b style="color:var(--text2)">Cum îl obții gratuit (5 min):</b><br>
-      1. <a href="https://workers.cloudflare.com" target="_blank" style="color:var(--green)">workers.cloudflare.com</a> → cont gratuit<br>
-      2. Create Worker → înlocuiește codul cu <b>cors-proxy-worker.js</b> din repo<br>
+      style="width:100%;box-sizing:border-box;background:#111;border:1px solid #333;border-radius:4px;padding:8px 10px;color:#eee;font-family:monospace;font-size:11px;outline:none;margin-bottom:8px">
+    <div id="proxy-status" style="font-size:10px;min-height:16px;margin-bottom:10px"></div>
+    <div style="font-size:9px;color:#555;padding:8px;background:#111;border-radius:4px;line-height:1.9;margin-bottom:14px">
+      <b style="color:#888">Setup gratuit (5 min):</b><br>
+      1. <a href="https://workers.cloudflare.com" target="_blank" style="color:#00ff88">workers.cloudflare.com</a> → cont gratuit<br>
+      2. Create Worker → pune codul din <b>cors-proxy-worker.js</b><br>
       3. Deploy → copiază URL-ul aici
     </div>
-    
-    <div style="display:flex;gap:8px;margin-top:16px">
-      <button onclick="saveProxy()"
-        style="flex:1;padding:8px;background:var(--green);color:#000;border:none;border-radius:4px;cursor:pointer;font-weight:700;font-family:inherit">
-        ✓ Salvează
-      </button>
-      <button onclick="testProxy()"
-        style="flex:1;padding:8px;background:transparent;color:var(--green);border:1px solid var(--green);border-radius:4px;cursor:pointer;font-family:inherit">
-        🔍 Testează
-      </button>
-      <button onclick="closeProxyModal()"
-        style="padding:8px 16px;background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-family:inherit">
-        ✕
-      </button>
+    <div style="display:flex;gap:8px">
+      <button onclick="saveProxy()" style="flex:1;padding:8px;background:#00ff88;color:#000;border:none;border-radius:4px;cursor:pointer;font-weight:700;font-family:inherit">✓ Salvează</button>
+      <button onclick="testProxy()" style="flex:1;padding:8px;background:transparent;color:#00ff88;border:1px solid #00ff88;border-radius:4px;cursor:pointer;font-family:inherit">🔍 Testează</button>
+      <button onclick="closeProxyModal()" style="padding:8px 14px;background:transparent;color:#666;border:1px solid #333;border-radius:4px;cursor:pointer;font-family:inherit">✕</button>
     </div>
   </div>
 </div>
 
-<div id="ticker-wrap">
-  <span id="ticker-label">◈ LIVE ARB</span>
-  <div id="ticker-track"><div id="ticker-empty">— Pornește scannerul pentru a vedea oportunități în timp real —</div></div>
-</div>
-
+<!-- MAIN GRID -->
 <div id="main">
+
+  <!-- LEFT: Opportunities -->
   <div style="display:flex;flex-direction:column;gap:8px">
     <div class="panel">
       <div class="panel-hdr">
         <div class="panel-title">▲ OPORTUNITĂȚI ARB LIVE</div>
-        <span style="font-size:7px;padding:2px 6px;border-radius:10px;border:1px solid rgba(0,255,136,.3);color:var(--green);background:var(--green3)" id="opp-count">0 găsite</span>
-        <span style="font-size:7px;color:var(--text3);margin-left:auto">Click pe card → instrucțiuni pas cu pas</span>
+        <span class="badge badge-green" id="opp-count">0 găsite</span>
+        <span style="font-size:7px;color:var(--text3);margin-left:auto">Click pe oportunitate pentru instrucțiuni</span>
       </div>
       <div id="opp-list">
-        <div class="opp-empty" id="opp-empty"><span class="big">◎</span>Apasă START SCAN pentru a căuta oportunități...</div>
+        <div class="opp-empty" id="opp-empty">
+          <span class="big">◎</span>
+          Apasă START SCAN pentru a căuta oportunități...
+        </div>
       </div>
     </div>
+
+    <!-- Exchange status -->
     <div>
-      <div style="font-size:7px;color:var(--text3);margin-bottom:4px;padding:0 2px">STATUS 14 EXCHANGE-URI · WS = WebSocket live · REST = polling</div>
+      <div style="font-size:7px;color:var(--text3);margin-bottom:4px;padding:0 2px">STATUS EXCHANGE-URI</div>
       <div id="ex-status"></div>
     </div>
+
+    <!-- Log -->
     <div class="panel">
       <div class="panel-hdr">
-        <div class="panel-title" style="font-size:11px">📋 LOG</div>
-        <button class="refresh-btn" onclick="document.getElementById('loglist').innerHTML=''">CLR</button>
+        <div class="panel-title" style="font-size:11px">?? LOG</div>
+        <button class="refresh-btn" onclick="document.getElementById('loglist').innerHTML='';logCount=0">CLR</button>
       </div>
       <div id="loglist"></div>
     </div>
   </div>
 
+  <!-- RIGHT: Instructions + helper -->
   <div id="instr-panel">
+
+    <!-- Instructions placeholder -->
     <div class="instr-card" id="instr-placeholder">
-      <div class="instr-hdr">📋 INSTRUCȚIUNI EXECUȚIE</div>
-      <div class="instr-empty"><div style="font-size:28px;margin-bottom:8px;color:var(--border2)">👆</div>Selectează o oportunitate<br>pentru instrucțiuni pas cu pas</div>
+      <div class="instr-hdr">?? INSTRUCȚIUNI EXECUȚIE</div>
+      <div class="instr-empty">
+        <div style="font-size:28px;margin-bottom:8px;color:var(--border2)">??</div>
+        Selectează o oportunitate din stânga<br>pentru instrucțiuni pas cu pas
+      </div>
     </div>
+
+    <!-- Selected opportunity instructions -->
     <div class="instr-card" id="selected-opp">
-      <div class="instr-hdr" id="sel-title">—</div>
+      <div class="instr-hdr" id="sel-title">— Selectat —</div>
       <div class="instr-body">
-        <div class="step"><div class="step-num">1</div><div class="step-content"><div class="step-title">DESCHIDE EXCHANGE-UL DE CUMPĂRARE</div><div class="step-detail" id="step1-detail">—</div><a href="#" class="step-link" id="step1-link" target="_blank">→ Deschide</a></div></div>
-        <div class="step"><div class="step-num">2</div><div class="step-content"><div class="step-title">CUMPĂRĂ (MARKET BUY)</div><div class="step-detail" id="step2-detail">—</div><div class="step-val" id="step2-val">—</div></div></div>
-        <div class="step"><div class="step-num">3</div><div class="step-content"><div class="step-title">DESCHIDE EXCHANGE-UL DE VÂNZARE</div><div class="step-detail" id="step3-detail">—</div><a href="#" class="step-link" id="step3-link" target="_blank">→ Deschide</a></div></div>
-        <div class="step"><div class="step-num">4</div><div class="step-content"><div class="step-title">VINDE (MARKET SELL)</div><div class="step-detail" id="step4-detail">—</div><div class="step-val" id="step4-val">—</div></div></div>
-        <div id="instr-alert" class="alert-box info">—</div>
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">DESCHIDE EXCHANGE-UL DE CUMPĂRARE</div>
+            <div class="step-detail" id="step1-detail">—</div>
+            <a href="#" class="step-link" id="step1-link" target="_blank">→ Deschide exchange</a>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">CUMPĂRĂ</div>
+            <div class="step-detail" id="step2-detail">—</div>
+            <div class="step-val" id="step2-val">—</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">DESCHIDE EXCHANGE-UL DE VÂNZARE</div>
+            <div class="step-detail" id="step3-detail">—</div>
+            <a href="#" class="step-link" id="step3-link" target="_blank">→ Deschide exchange</a>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">VINDE</div>
+            <div class="step-detail" id="step4-detail">—</div>
+            <div class="step-val" id="step4-val">—</div>
+          </div>
+        </div>
+        <div id="instr-alert" class="alert-box info" style="margin-top:4px">—</div>
+        <!-- Price comparison table -->
         <div style="margin-top:10px">
-          <div style="font-size:8px;color:var(--text3);margin-bottom:4px">PREȚURI PE TOATE EXCHANGE-URILE</div>
-          <table class="cmp-table"><thead><tr><th>Exchange</th><th>BID</th><th>ASK</th></tr></thead><tbody id="cmp-tbody"></tbody></table>
+          <div style="font-size:8px;color:var(--text3);margin-bottom:4px">PREȚURI TOATE EXCHANGE-URILE</div>
+          <table class="cmp-table" id="cmp-table">
+            <thead><tr><th>Exchange</th><th>BID (vânzare)</th><th>ASK (cumpărare)</th></tr></thead>
+            <tbody id="cmp-tbody"></tbody>
+          </table>
         </div>
       </div>
     </div>
+
+    <!-- Quick tips -->
     <div class="instr-card">
       <div class="instr-hdr" style="color:var(--yellow);font-size:11px">⚠ RISCURI & SFATURI</div>
-      <div class="instr-body" style="font-size:8px;color:var(--text2);line-height:2">
-        <div>▸ <b style="color:var(--text)">La 0.5s</b> — acționează imediat, prețul expiră rapid</div>
-        <div>▸ <b style="color:var(--text)">Spread &gt; 0.3%</b> = realist pentru execuție manuală</div>
-        <div>▸ <b style="color:var(--text)">Fonduri pe AMBELE exchange-uri</b> înainte de start</div>
-        <div>▸ <b style="color:var(--text)">Taxele taker</b> sunt scăzute din profit</div>
-        <div>▸ <b style="color:var(--text)">Verifică prețul live</b> pe exchange chiar înainte de plasare</div>
+      <div class="instr-body" style="font-size:8px;color:var(--text2);line-height:1.9">
+        <div>▸ <b style="color:var(--text)">Ai fonduri pe AMBELE exchange-uri</b> înainte de a executa</div>
+        <div>▸ <b style="color:var(--text)">Execuția durează 5-30 sec</b> — prețul se poate schimba</div>
+        <div>▸ <b style="color:var(--text)">Taxele taker</b> sunt incluse în calculul profitului</div>
+        <div>▸ <b style="color:var(--text)">Spread real > 0.3%</b> = mai sigur pentru manual</div>
+        <div>▸ <b style="color:var(--text)">Binance + Coinbase</b> = exchange-uri recomandate pt EU</div>
+        <div>▸ <b style="color:var(--text)">Verifică prețul din nou</b> chiar înainte de execuție</div>
       </div>
     </div>
+
+    <!-- Exchange quick links -->
     <div class="instr-card">
-      <div class="instr-hdr" style="font-size:11px">🔗 LINKURI RAPIDE</div>
+      <div class="instr-hdr" style="font-size:11px">?? LINKURI RAPIDE</div>
       <div class="instr-body" style="padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px">
-        <a class="quick-link" href="https://www.binance.com/en/trade" target="_blank"><div class="ql-name" style="color:#F0B90B">Binance</div><div class="ql-url">binance.com/trade</div></a>
-        <a class="quick-link" href="https://www.bybit.com/en/trade" target="_blank"><div class="ql-name" style="color:#F7A600">Bybit</div><div class="ql-url">bybit.com/trade</div></a>
-        <a class="quick-link" href="https://www.okx.com/trade-spot" target="_blank"><div class="ql-name" style="color:#7B61FF">OKX</div><div class="ql-url">okx.com/trade-spot</div></a>
-        <a class="quick-link" href="https://pro.coinbase.com" target="_blank"><div class="ql-name" style="color:#0052FF">Coinbase</div><div class="ql-url">pro.coinbase.com</div></a>
-        <a class="quick-link" href="https://www.kucoin.com/trade" target="_blank"><div class="ql-name" style="color:#23AF91">KuCoin</div><div class="ql-url">kucoin.com/trade</div></a>
-        <a class="quick-link" href="https://www.mexc.com/exchange" target="_blank"><div class="ql-name" style="color:#00C087">MEXC</div><div class="ql-url">mexc.com/exchange</div></a>
-        <a class="quick-link" href="https://www.gate.io/trade" target="_blank"><div class="ql-name" style="color:#E76E28">Gate.io</div><div class="ql-url">gate.io/trade</div></a>
-        <a class="quick-link" href="https://www.bitget.com/spot" target="_blank"><div class="ql-name" style="color:#00CED1">Bitget</div><div class="ql-url">bitget.com/spot</div></a>
-        <a class="quick-link" href="https://crypto.com/exchange/trade" target="_blank"><div class="ql-name" style="color:#1199FA">Crypto.com</div><div class="ql-url">crypto.com/exchange</div></a>
-        <a class="quick-link" href="https://bingx.com/en/spot" target="_blank"><div class="ql-name" style="color:#1DA462">BingX</div><div class="ql-url">bingx.com/spot</div></a>
-        <a class="quick-link" href="https://pro.kraken.com" target="_blank"><div class="ql-name" style="color:#5741D9">Kraken</div><div class="ql-url">pro.kraken.com</div></a>
+        <a class="quick-link" href="https://www.binance.com/en/trade" target="_blank">
+          <div class="ql-name" style="color:#F0B90B">Binance</div>
+          <div class="ql-url">binance.com/trade</div>
+        </a>
+        <a class="quick-link" href="https://www.bybit.com/en/trade" target="_blank">
+          <div class="ql-name" style="color:#F7A600">Bybit</div>
+          <div class="ql-url">bybit.com/trade</div>
+        </a>
+        <a class="quick-link" href="https://www.okx.com/trade-spot" target="_blank">
+          <div class="ql-name" style="color:#7B61FF">OKX</div>
+          <div class="ql-url">okx.com/trade-spot</div>
+        </a>
+        <a class="quick-link" href="https://pro.coinbase.com" target="_blank">
+          <div class="ql-name" style="color:#0052FF">Coinbase</div>
+          <div class="ql-url">pro.coinbase.com</div>
+        </a>
+        <a class="quick-link" href="https://www.kucoin.com/trade" target="_blank">
+          <div class="ql-name" style="color:#23AF91">KuCoin</div>
+          <div class="ql-url">kucoin.com/trade</div>
+        </a>
+        <a class="quick-link" href="https://www.mexc.com/exchange" target="_blank">
+          <div class="ql-name" style="color:#00C087">MEXC</div>
+          <div class="ql-url">mexc.com/exchange</div>
+        </a>
+        <a class="quick-link" href="https://www.gate.io/trade" target="_blank">
+          <div class="ql-name" style="color:#E76E28">Gate.io</div>
+          <div class="ql-url">gate.io/trade</div>
+        </a>
+        <a class="quick-link" href="https://www.bitget.com/spot" target="_blank">
+          <div class="ql-name" style="color:#00CED1">Bitget</div>
+          <div class="ql-url">bitget.com/spot</div>
+        </a>
       </div>
     </div>
-  </div>
-</div>
-</div>
+
+  </div><!-- /instr-panel -->
+</div><!-- /main -->
+</div><!-- /app -->
+
 <script>
 'use strict';
-var TRADE_SIZE=100, MIN_SPREAD=0.10, SCAN_INTERVAL=500, SOUND_ON=false;
 
-// ─── CORS PROXY ────────────────────────────────────────────────
-// Dacă ai deploy-at Cloudflare Worker, pune URL-ul aici
-// Tutorial: vezi cors-proxy-worker.js din repo
-// Lasă '' dacă nu ai proxy (KuCoin va fi sărit)
-var CORS_PROXY = ''; // ex: 'https://arb-proxy.yourname.workers.dev'
-// ──────────────────────────────────────────────────────────────
-var ACTIVE_QUOTES={USDT:true,USDC:true,USD:false,EUR:false};
+// ═══════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════
+var TRADE_SIZE = 100;
+var MIN_SPREAD = 0.20; // %
+var SCAN_INTERVAL = 2000;
+var ACTIVE_QUOTES = {USDT:true, USDC:true, USD:false, EUR:false};
+var SOUND_ON = false;
 
-var EX={
-  binance:  {n:'Binance',    c:'#F0B90B',ws:true,  url:'https://www.binance.com/en/trade/{COIN}_{QUOTE}'},
-  bybit:    {n:'Bybit',      c:'#F7A600',ws:true,  url:'https://www.bybit.com/en/trade/spot/{COIN}/{QUOTE}'},
-  okx:      {n:'OKX',        c:'#7B61FF',ws:true,  url:'https://www.okx.com/trade-spot/{coin}-{quote}'},
-  kraken:   {n:'Kraken',     c:'#5741D9',ws:true,  url:'https://pro.kraken.com/app/trade/{coin}-{quote}'},
-  coinbase: {n:'Coinbase',   c:'#0052FF',ws:true,  url:'https://advanced.coinbase.com/trade/{COIN}-{QUOTE}'},
-  kucoin:   {n:'KuCoin',     c:'#23AF91',ws:true,  url:'https://www.kucoin.com/trade/{COIN}-{QUOTE}'},
-  gate:     {n:'Gate.io',    c:'#E76E28',ws:true,  url:'https://www.gate.io/trade/{COIN}_{QUOTE}'},
-  mexc:     {n:'MEXC',       c:'#00C087',ws:true,  url:'https://www.mexc.com/exchange/{COIN}_{QUOTE}'},
-  bingx:    {n:'BingX',      c:'#1DA462',ws:true,  url:'https://bingx.com/en/spot/{COIN}-{QUOTE}/'},
-  cryptocom:{n:'Crypto.com', c:'#1199FA',ws:true,  url:'https://crypto.com/exchange/trade/{coin}_{quote}'},
-  bitget:   {n:'Bitget',     c:'#00CED1',ws:false, url:'https://www.bitget.com/spot/{COIN}{QUOTE}'},
-  htx:      {n:'HTX',        c:'#2196F3',ws:true,  url:'https://www.htx.com/trade/{coin}_usdt/'},
-  bitmart:  {n:'BitMart',    c:'#FF6B35',ws:true,  url:'https://www.bitmart.com/trade/en-US?symbol={COIN}_{QUOTE}'},
-  wex:      {n:'WEX',        c:'#9C27B0',ws:false, url:'https://wex.app/spot/{COIN}{QUOTE}'},
+var EX = {
+  binance:  {n:'Binance',    c:'#F0B90B', ws:true,  url:'https://www.binance.com/en/trade/{COIN}_{QUOTE}'},
+  bybit:    {n:'Bybit',      c:'#F7A600', ws:true,  url:'https://www.bybit.com/en/trade/spot/{COIN}/{QUOTE}'},
+  okx:      {n:'OKX',        c:'#7B61FF', ws:true,  url:'https://www.okx.com/trade-spot/{coin}-{quote}'},
+  kraken:   {n:'Kraken',     c:'#5741D9', ws:true,  url:'https://pro.kraken.com/app/trade/{coin}-{quote}'},
+  coinbase: {n:'Coinbase',   c:'#0052FF', ws:true,  url:'https://advanced.coinbase.com/trade/{COIN}-{QUOTE}'},
+  kucoin:   {n:'KuCoin',     c:'#23AF91', ws:true,  url:'https://www.kucoin.com/trade/{COIN}-{QUOTE}'},
+  gate:     {n:'Gate.io',    c:'#E76E28', ws:true,  url:'https://www.gate.io/trade/{COIN}_{QUOTE}'},
+  mexc:     {n:'MEXC',       c:'#00C087', ws:true,  url:'https://www.mexc.com/exchange/{COIN}_{QUOTE}'},
+  bingx:    {n:'BingX',      c:'#1DA462', ws:true,  url:'https://bingx.com/en/spot/{COIN}-{QUOTE}/'},
+  cryptocom:{n:'Crypto.com', c:'#1199FA', ws:true,  url:'https://crypto.com/exchange/trade/{coin}_{quote}'},
+  bitget:   {n:'Bitget',     c:'#00CED1', ws:false, url:'https://www.bitget.com/spot/{COIN}{QUOTE}'},
+  htx:      {n:'HTX',        c:'#2196F3', ws:true,  url:'https://www.htx.com/trade/{coin}_usdt/'},
+  bitmart:  {n:'BitMart',    c:'#FF6B35', ws:true,  url:'https://www.bitmart.com/trade/en-US?symbol={COIN}_{QUOTE}'},
+  wex:      {n:'WEX',        c:'#9C27B0', ws:false, url:'https://wex.app/spot/{COIN}{QUOTE}'},
 };
-var EXK=Object.keys(EX);
-var TAKER={binance:.001,mexc:.001,bybit:.001,okx:.001,kraken:.0026,coinbase:.006,kucoin:.001,bitget:.001,bingx:.001,gate:.002,cryptocom:.002,htx:.002,bitmart:.0025,wex:.002};
+var EXK = Object.keys(EX);
 
-// Minimum BID liquidity (USD) required for an exchange to be valid as SELL side
-// Minimum ASK liquidity (USD) required for an exchange to be valid as BUY side
-// Exchanges with lower real volume get higher minimums to filter noise
-var MIN_LIQ_SELL = {
-  binance:  50,
-  bybit:    50,
-  okx:      50,
-  mexc:     30,
-  gate:     30,
-  kucoin:   30,
-  bingx:    20,
-  bitget:   20,
-  coinbase: 100,  // taxe mari — threshold mai strict
-  kraken:   100,  // taxe mari
-  cryptocom:100,  // volum mic pe altcoins
-  htx:      50,   // fostul Huobi, volum decent
-  bitmart:  30,   // volum mediu
-  wex:      20,   // exchange mai mic
-};
-var MIN_LIQ_BUY = {
-  binance:  50,
-  bybit:    50,
-  okx:      50,
-  mexc:     30,
-  gate:     30,
-  kucoin:   30,
-  bingx:    20,
-  bitget:   20,
-  coinbase: 100,
-  kraken:   100,
-  cryptocom:100,
-  htx:      50,
-  bitmart:  30,
-  wex:      20,
-};
-// Exchange-uri excluse din calcul arb (taxe prea mari sau volum mic)
-var ARB_EXCLUDED={}; // toate exchange-urile active în ARB — ajustează MIN_LIQ per exchange
+var TAKER = {binance:.001,mexc:.001,bybit:.001,okx:.001,kraken:.0026,coinbase:.006,kucoin:.001,bitget:.001,bingx:.001,gate:.002,cryptocom:.002,htx:.002,bitmart:.0025,wex:.002};
 
-// Coins with KNOWN network fragmentation across exchanges
-// (different chains = withdrawal impossible or costs more than profit)
-// Format: coin -> { exchange: 'CHAIN', ... }
-// If two exchanges don't share a common cheap network -> flag as NETWORK_MISMATCH
-var KNOWN_NETWORKS = {
-  // Binance restricts these to ETH only (expensive!) while others support BASE/SOL/cheaper chains
-  'FUN':    {binance:'ETH', bitget:'BASE', mexc:'ETH'},
-  'ACH':    {binance:'ETH', bybit:'ETH'},
-  'BOSON':  {binance:'ETH', bybit:'ETH'},
-  // Solana-native tokens (only work on Solana network)
-  'RAY':    {binance:'SOL', bybit:'SOL', okx:'SOL'},
-  'JTO':    {binance:'SOL', bybit:'SOL', okx:'SOL'},
-  'JUP':    {binance:'SOL', bybit:'SOL', okx:'SOL'},
-  'BONK':   {binance:'SOL', bybit:'SOL', okx:'SOL'},
-  'WIF':    {binance:'SOL', bybit:'SOL', okx:'SOL'},
-  'BOME':   {binance:'SOL', bybit:'SOL', okx:'SOL'},
-  'MYRO':   {binance:'SOL', bybit:'SOL'},
-  'SAMO':   {binance:'SOL', bybit:'SOL'},
-  'ORCA':   {binance:'SOL', bybit:'SOL', okx:'SOL'},
-  'PYTH':   {binance:'SOL', bybit:'SOL', okx:'SOL'},
-  'POPCAT': {binance:'SOL', bybit:'SOL', okx:'SOL'},
-  'SLERF':  {binance:'SOL', bybit:'SOL'},
-  'PNUT':   {binance:'SOL', bybit:'SOL', okx:'SOL'},
-  'PENGU':  {binance:'SOL', bybit:'SOL', okx:'SOL'},
-  // Tokens where withdrawal network is expensive (ETH only, high fees)
-  // These can still work if spread is large enough to cover ~$15-30 ETH gas
-  // We'll warn but not filter - user decides
+var ARB_EXCLUDED = {}; // toate active — reglaj prin MIN_LIQ
+
+var MIN_LIQ_SELL = {binance:50,bybit:50,okx:50,mexc:30,gate:30,kucoin:30,bingx:20,bitget:20,coinbase:100,kraken:100,cryptocom:100,htx:50,bitmart:30,wex:20};
+var MIN_LIQ_BUY  = {binance:50,bybit:50,okx:50,mexc:30,gate:30,kucoin:30,bingx:20,bitget:20,coinbase:100,kraken:100,cryptocom:100,htx:50,bitmart:30,wex:20};
+
+// CORS Proxy — setat din butonul ⚡ PROXY din UI
+var CORS_PROXY = (function(){ try{ return localStorage.getItem('arb_cors_proxy')||''; }catch(e){ return ''; } })();
+
+var COINS=['1INCH', 'AAVE', 'ACA', 'ACE', 'ACH', 'ACM', 'ACT', 'ADA', 'ADX', 'AERGO', 'AERO', 'AEVO', 'AGI', 'AGIX', 'AGLD', 'AI16Z', 'AION', 'AIOZ', 'AKRO', 'AKT', 'ALICE', 'ALLO', 'ALN', 'ALPACA', 'ALPHA', 'ALPINE', 'ALT', 'AMB', 'AMP', 'AMPL', 'ANT', 'APE', 'API3', 'APT', 'AR', 'ARB', 'ARDR', 'ARK', 'ARKM', 'ARPA', 'ASM', 'ASR', 'AST', 'ASTR', 'ATA', 'ATH', 'ATLAS', 'ATM', 'ATOM', 'AUDIO', 'AUDIUS', 'AURA', 'AVA', 'AVAX', 'AVNT', 'AXL', 'AXS', 'BAKE', 'BAL', 'BAND', 'BAR', 'BAT', 'BCH', 'BEL', 'BETA', 'BGB', 'BICO', 'BIO', 'BLAST', 'BLD', 'BLUR', 'BLZ', 'BNB', 'BNT', 'BNX', 'BOBA', 'BOME', 'BOND', 'BONK', 'BORA', 'BOSON', 'BRD', 'BRZ', 'BSW', 'BTG', 'BTS', 'BTT', 'BURGER', 'C98', 'CAKE', 'CATI', 'CELO', 'CELR', 'CFG', 'CFX', 'CHESS', 'CHR', 'CHZ', 'CITY', 'CKB', 'CLV', 'CMC', 'COCOS', 'COMBO', 'COMP', 'CONV', 'COTI', 'COW', 'CREAM', 'CRO', 'CRU', 'CRV', 'CTK', 'CTSI', 'CTXC', 'CVC', 'CVX', 'CYBER', 'DAR', 'DASH', 'DATA', 'DCR', 'DEEP', 'DEGO', 'DENT', 'DEP', 'DERC', 'DEXE', 'DF', 'DGB', 'DIA', 'DIGG', 'DOCK', 'DODO', 'DOGE', 'DOT', 'DREP', 'DUSK', 'DVPN', 'DYDX', 'DYM', 'EDU', 'EGLD', 'EIGEN', 'ELF', 'ENA', 'ENJ', 'ENS', 'EPS', 'EPX', 'ERG', 'ERN', 'ETC', 'ETH', 'ETHFI', 'EVMOS', 'EWT', 'FARM', 'FET', 'FEVR', 'FIDA', 'FIL', 'FIS', 'FLM', 'FLOKI', 'FLOW', 'FNB', 'FOR', 'FRONT', 'FTM', 'FTN', 'FUEL', 'FXS', 'GAFI', 'GALA', 'GARI', 'GHST', 'GLM', 'GLMR', 'GMX', 'GNO', 'GNS', 'GNX', 'GOAT', 'GODS', 'GRT', 'GST', 'GT', 'GUILD', 'HARD', 'HBAR', 'HEGIC', 'HIFI', 'HIGH', 'HIVE', 'HNT', 'HOT', 'HT', 'HYPE', 'HYPER', 'ICP', 'ICX', 'ILV', 'IMX', 'INDEX', 'INIT', 'INJ', 'INTER', 'IO', 'IOTA', 'IOTX', 'IQ', 'IRIS', 'IXS', 'JAM', 'JASMY', 'JONES', 'JST', 'JTO', 'JUNO', 'JUP', 'JUV', 'KAITO', 'KAR', 'KAS', 'KAVA', 'KCS', 'KEY', 'KIN', 'KINT', 'KITE', 'KLAY', 'KRL', 'KSM', 'KUB', 'KUJI', 'KWENTA', 'LAT', 'LAZIO', 'LBC', 'LBR', 'LCX', 'LDO', 'LEVER', 'LINA', 'LINK', 'LISTA', 'LIT', 'LOKA', 'LOOKS', 'LPT', 'LQTY', 'LRC', 'LSK', 'LTC', 'LTO', 'LYRA', 'MAGIC', 'MANA', 'MANTA', 'MAPLE', 'MAV', 'MAVIA', 'MBOX', 'MC', 'MCB', 'MDT', 'MDX', 'MEDIA', 'MEME', 'MERLIN', 'METIS', 'MEW', 'MINA', 'MKR', 'MOD', 'MON', 'MORPHO', 'MOVE', 'MOVR', 'MTL', 'MV', 'MX', 'MXC', 'MYRO', 'NAVI', 'NCT', 'NEAR', 'NEIRO', 'NEO', 'NEST', 'NEXO', 'NFT', 'NFTX', 'NGM', 'NIM', 'NKN', 'NMR', 'NOIA', 'NOM', 'NOT', 'NULS', 'OCEAN', 'OCN', 'OG', 'OGN', 'OHM', 'OKB', 'OLT', 'OM', 'OMNI', 'ONDO', 'ONE', 'ONT', 'ONX', 'OP', 'OPUL', 'ORAI', 'ORCA', 'ORDI', 'ORN', 'OSMO', 'OXT', 'PAL', 'PDEX', 'PENDLE', 'PENGU', 'PEOPLE', 'PEPE', 'PERP', 'PHA', 'PHTR', 'PICA', 'PIX', 'PIXEL', 'PIXELS', 'PLT', 'PNK', 'PNUT', 'POL', 'POLIS', 'POLK', 'POLS', 'POLY', 'POND', 'POPCAT', 'PORTAL', 'PORTO', 'POWR', 'PRIME', 'PROM', 'PROS', 'PROVE', 'PSG', 'PUSH', 'PYR', 'PYTH', 'QI', 'QSP', 'QTUM', 'QUICK', 'RAI', 'RALLY', 'RARE', 'RAY', 'RDNT', 'RED', 'REEF', 'REGEN', 'REN', 'RENDER', 'REVV', 'REZ', 'RGP', 'RIA', 'RLC', 'RLY', 'RMRK', 'ROBO', 'ROSE', 'RPL', 'RUNE', 'RVF', 'RVN', 'SAFE', 'SAGA', 'SAMO', 'SAND', 'SANTOS', 'SC', 'SCROLL', 'SCRT', 'SDL', 'SEI', 'SFP', 'SFUND', 'SHIB', 'SHR', 'SIA', 'SIGN', 'SKILL', 'SKL', 'SLERF', 'SLIM', 'SLP', 'SLRS', 'SNC', 'SNX', 'SOI', 'SOL', 'SOUL', 'SPELL', 'SPK', 'SPS', 'SRK', 'SRM', 'STAFI', 'STARL', 'STARS', 'STMX', 'STORJ', 'STPT', 'STRD', 'STRK', 'STX', 'SUB', 'SUI', 'SUKU', 'SUN', 'SUPER', 'SURV', 'SUSHI', 'SWEAT', 'SWINGBY', 'SWISE', 'SXP', 'SYLO', 'SYN', 'SYNTHR', 'SYS', 'TAIKO', 'TAO', 'TCG', 'TEER', 'TELOS', 'TFUEL', 'THETA', 'TIA', 'TIME', 'TKING', 'TKO', 'TLM', 'TLOS', 'TNSR', 'TOMO', 'TON', 'TORN', 'TOSHI', 'TOWER', 'TPT', 'TRAC', 'TRB', 'TRIAS', 'TRIBE', 'TRIG', 'TROY', 'TRU', 'TRUMP', 'TRVL', 'TRX', 'TURBO', 'TVK', 'TWT', 'UFARM', 'UFT', 'ULTRA', 'UMA', 'UNFI', 'UNI', 'UNIBOT', 'USUAL', 'UTK', 'UXLINK', 'VEED', 'VELO', 'VET', 'VIDT', 'VIRTUAL', 'VITE', 'VLX', 'VOXEL', 'VRA', 'W', 'WAL', 'WAN', 'WAVES', 'WAXP', 'WEMIX', 'WET', 'WIF', 'WIN', 'WING', 'WINK', 'WLD', 'WOM', 'WRX', 'XCAD', 'XED', 'XEM', 'XFT', 'XGT', 'XLM', 'XMR', 'XNL', 'XNO', 'XPR', 'XPRT', 'XRP', 'XTZ', 'XVG', 'YFI', 'YGG', 'YLD', 'ZEC', 'ZEN', 'ZETA', 'ZIL', 'ZIRCUIT', 'ZK', 'ZORA', 'ZRO'];
+
+// State
+var S = {
+  running:false, timer:null, scanCount:0, prices:{}, latency:{}, results:[], selectedArb:null,
+  _lastScan:0, soundAC:null
 };
 
-// Minimum spread to cover ETH gas fees (assuming ~$15 avg gas cost)
-// At $100 trade size = need 15% spread just to break even on gas!
-// At $1000 trade size = need 1.5%
-function getNetworkWarning(coin, buyEx, sellEx) {
-  var networks = KNOWN_NETWORKS[coin];
-  if (!networks) return null;
-  var buyNet = networks[buyEx];
-  var sellNet = networks[sellEx];
-  if (!buyNet || !sellNet) return null;
-  if (buyNet === sellNet) return null; // same network = OK
-  // Different networks = need bridge or different withdrawal
-  return {
-    warning: true,
-    buyNetwork: buyNet,
-    sellNetwork: sellNet,
-    msg: 'REȚELE DIFERITE: ' + buyEx.toUpperCase() + ' folosește ' + buyNet + ', ' + sellEx.toUpperCase() + ' folosește ' + sellNet + '. Transfer direct imposibil!'
-  };
-}
-var COINS=['1INCH', 'AAVE', 'ACA', 'ACE', 'ACH', 'ACM', 'ACMN', 'ACS', 'ACT', 'ADA', 'ADX', 'AERGO', 'AERO', 'AEVO', 'AGI', 'AGIX', 'AGLD', 'AI16Z', 'AION', 'AIOZ', 'AIRL', 'AKRO', 'AKT', 'ALGO', 'ALICE', 'ALLO', 'ALN', 'ALPACA', 'ALPHA', 'ALPINE', 'ALPS', 'ALT', 'AMB', 'AMP', 'AMPL', 'ANKR', 'ANT', 'APE', 'API3', 'APT', 'AR', 'ARB', 'ARDR', 'ARIS', 'ARK', 'ARKM', 'ARPA', 'ASM', 'ASR', 'AST', 'ASTR', 'ASTRO', 'ATA', 'ATH', 'ATLAS', 'ATM', 'ATOM', 'AUDIO', 'AUDIUS', 'AURA', 'AVA', 'AVAX', 'AVNT', 'AXL', 'AXS', 'AZERO', 'BABY', 'BADGER', 'BAKE', 'BAL', 'BAND', 'BAR', 'BAT', 'BCH', 'BEAM', 'BEL', 'BERA', 'BETA', 'BGB', 'BICO', 'BIO', 'BLAST', 'BLD', 'BLUR', 'BLZ', 'BNB', 'BNT', 'BNX', 'BOBA', 'BOME', 'BOND', 'BONDLY', 'BONK', 'BORA', 'BOSON', 'BRD', 'BRZ', 'BSW', 'BTC', 'BTG', 'BTS', 'BTT', 'BURGER', 'C98', 'CAKE', 'CATI', 'CELO', 'CELR', 'CFG', 'CFX', 'CGPT', 'CHESS', 'CHR', 'CHZ', 'CITY', 'CKB', 'CLV', 'CMC', 'COCOS', 'COMBO', 'COMP', 'CONV', 'COTI', 'COW', 'CREAM', 'CRO', 'CRU', 'CRV', 'CTK', 'CTSI', 'CTXC', 'CUDOS', 'CVC', 'CVX', 'CWS', 'CYBER', 'DAO', 'DAR', 'DASH', 'DATA', 'DCR', 'DEEP', 'DEGEN', 'DEGO', 'DENT', 'DEP', 'DERC', 'DEXE', 'DF', 'DGB', 'DIA', 'DIGG', 'DNA', 'DNT', 'DOCK', 'DODO', 'DOGE', 'DOT', 'DPR', 'DREP', 'DSLA', 'DUSK', 'DVPN', 'DYDX', 'DYM', 'EDU', 'EGLD', 'EIGEN', 'ELF', 'ENA', 'ENJ', 'ENS', 'EPAN', 'EPS', 'EPX', 'ERG', 'ERN', 'ETC', 'ETH', 'ETHFI', 'EULER', 'EVA', 'EVER', 'EVMOS', 'EWT', 'FARM', 'FARTCOIN', 'FET', 'FEVR', 'FIDA', 'FIL', 'FIS', 'FLM', 'FLOKI', 'FLOW', 'FLT', 'FNB', 'FOAM', 'FOR', 'FOX', 'FRONT', 'FRXETH', 'FTM', 'FTN', 'FUEL', 'FXS', 'GAFI', 'GALA', 'GARI', 'GHST', 'GLM', 'GLMR', 'GMX', 'GNO', 'GNS', 'GNX', 'GOAT', 'GODS', 'GRT', 'GST', 'GT', 'GUILD', 'HAI', 'HAKA', 'HARD', 'HBAR', 'HEC', 'HEGIC', 'HELMET', 'HFT', 'HIFI', 'HIGH', 'HIVE', 'HNT', 'HOT', 'HT', 'HXRO', 'HYDRA', 'HYPE', 'HYPER', 'IBT', 'ICP', 'ICX', 'IGU', 'ILV', 'IMX', 'INA', 'INDEX', 'INIT', 'INJ', 'INTER', 'INTR', 'IO', 'IOTA', 'IOTX', 'IQ', 'IRIS', 'IXS', 'JAM', 'JASMY', 'JONES', 'JST', 'JTO', 'JUNO', 'JUP', 'JUV', 'KAITO', 'KALM', 'KAR', 'KARMA', 'KAS', 'KASTA', 'KAVA', 'KCS', 'KEY', 'KIN', 'KINT', 'KITE', 'KLAY', 'KLIMA', 'KMON', 'KOBE', 'KOGE', 'KRL', 'KSM', 'KUB', 'KUJI', 'KWENTA', 'LA', 'LAT', 'LAZIO', 'LBC', 'LBR', 'LCX', 'LDO', 'LEAD', 'LEVER', 'LINA', 'LINK', 'LISTA', 'LIT', 'LOKA', 'LOOKS', 'LPT', 'LQTY', 'LRC', 'LSK', 'LTC', 'LTO', 'LYRA', 'MAGIC', 'MANA', 'MANGO', 'MANTA', 'MAPLE', 'MARS', 'MASK', 'MATIC', 'MAV', 'MAVIA', 'MBL', 'MBOX', 'MC', 'MCB', 'MCO', 'MDT', 'MDX', 'MEDIA', 'MEME', 'MERLIN', 'METIS', 'MEW', 'MIM', 'MINA', 'MITH', 'MKR', 'MOCA', 'MOD', 'MODA', 'MODE', 'MON', 'MORPHO', 'MOVE', 'MOVR', 'MPH', 'MQL', 'MST', 'MTL', 'MUU', 'MV', 'MX', 'MXC', 'MYRO', 'MYST', 'NANO', 'NAOS', 'NAVI', 'NCT', 'NEAR', 'NEIRO', 'NEO', 'NEON', 'NEST', 'NEXO', 'NFD', 'NFT', 'NFTX', 'NGL', 'NGM', 'NIM', 'NKN', 'NMKR', 'NMR', 'NOIA', 'NOM', 'NOT', 'NOVA', 'NPT', 'NULS', 'NUT', 'O3', 'OCEAN', 'OCN', 'OCTA', 'OG', 'OGN', 'OHM', 'OKB', 'OLT', 'OM', 'OMNI', 'ONDO', 'ONE', 'ONT', 'ONX', 'OP', 'OPUL', 'ORAI', 'ORCA', 'ORDI', 'ORN', 'OSMO', 'OVR', 'OXT', 'PAL', 'PARA', 'PAY', 'PDEX', 'PENDLE', 'PENGU', 'PEOPLE', 'PEPE', 'PERP', 'PHA', 'PHTR', 'PICA', 'PIX', 'PIXEL', 'PIXELS', 'PKF', 'PLT', 'PNK', 'PNP', 'PNUT', 'POL', 'POLIS', 'POLK', 'POLS', 'POLX', 'POLY', 'POND', 'POPCAT', 'PORTAL', 'PORTO', 'POWR', 'PPT', 'PREMIA', 'PRIME', 'PROM', 'PROS', 'PROVE', 'PSG', 'PUSH', 'PYR', 'PYTH', 'QI', 'QSP', 'QTUM', 'QUICK', 'RAI', 'RALLY', 'RARE', 'RAY', 'RDNT', 'RED', 'REEF', 'REGEN', 'RELAY', 'REN', 'RENDER', 'REVV', 'REZ', 'RFOX', 'RGP', 'RIA', 'RLC', 'RLY', 'RMRK', 'ROBO', 'ROCKI', 'ROSE', 'ROUTE', 'RPL', 'RUBIC', 'RUNE', 'RVF', 'RVN', 'SAFE', 'SAGA', 'SAKE', 'SAMO', 'SAND', 'SANTOS', 'SAROS', 'SC', 'SCROLL', 'SCRT', 'SDL', 'SEI', 'SEND', 'SFP', 'SFUND', 'SHIB', 'SHR', 'SIA', 'SIGN', 'SKILL', 'SKL', 'SLERF', 'SLIM', 'SLP', 'SLRS', 'SNC', 'SNFT', 'SNOW', 'SNX', 'SOFI', 'SOI', 'SOL', 'SOUL', 'SPARTA', 'SPELL', 'SPK', 'SPS', 'SRK', 'SRM', 'STAFI', 'STAKE', 'STARL', 'STARS', 'STETH', 'STMX', 'STORJ', 'STPT', 'STRD', 'STRK', 'STRONG', 'STRP', 'STX', 'SUB', 'SUI', 'SUKU', 'SUN', 'SUPER', 'SURV', 'SUSHI', 'SUTER', 'SWEAT', 'SWINGBY', 'SWISE', 'SXP', 'SYLO', 'SYMM', 'SYN', 'SYNTHR', 'SYS', 'TAIKO', 'TAO', 'TBTC', 'TCG', 'TCT', 'TEER', 'TELOS', 'TENSET', 'TFUEL', 'THETA', 'TIA', 'TIME', 'TKING', 'TKO', 'TLM', 'TLOS', 'TNSR', 'TOKO', 'TOMO', 'TON', 'TORN', 'TOSHI', 'TOWER', 'TPT', 'TRAC', 'TRAVA', 'TRB', 'TRIAS', 'TRIBE', 'TRIG', 'TROY', 'TRU', 'TRUMP', 'TRVL', 'TRX', 'TST', 'TTC', 'TURBO', 'TVK', 'TWT', 'UAH', 'UFARM', 'UFT', 'ULTRA', 'UMA', 'UNFI', 'UNI', 'UNIBOT', 'USUAL', 'UTK', 'UXLINK', 'VALUE', 'VEED', 'VELO', 'VEMP', 'VERSE', 'VET', 'VIBE', 'VIDT', 'VIRTUAL', 'VITE', 'VLX', 'VOXEL', 'VRA', 'W', 'WAL', 'WAN', 'WAVES', 'WAXP', 'WEMIX', 'WET', 'WIF', 'WIN', 'WING', 'WINK', 'WIS', 'WIZARD', 'WLD', 'WOM', 'WOMBAT', 'WRX', 'XCAD', 'XDAO', 'XDEFI', 'XED', 'XEM', 'XFT', 'XGT', 'XLM', 'XMR', 'XNL', 'XNO', 'XPR', 'XPRT', 'XRP', 'XTZ', 'XVG', 'YAM', 'YETI', 'YFI', 'YGG', 'YLD', 'ZCX', 'ZEC', 'ZEE', 'ZEN', 'ZETA', 'ZFI', 'ZIL', 'ZIRCUIT', 'ZK', 'ZKML', 'ZONE', 'ZORA', 'ZRO', 'ZTX'];
+var WS_PRICES = {};
+var WS_CONNS = {};
 
-var S={running:false,timer:null,scanCount:0,prices:{},latency:{},results:[],selectedArb:null};
-var WS_PRICES={}, WS_CONNS={};
-var CB={fails:{},times:{},T:4,C:45000,
+// Circuit breaker
+var CB = {fails:{},times:{},T:3,C:30000,
   fail:function(k){this.fails[k]=(this.fails[k]||0)+1;if(this.fails[k]>=this.T)this.times[k]=Date.now();},
   ok:function(k){this.fails[k]=0;delete this.times[k];},
   isOpen:function(k){if(!this.times[k])return false;return(Date.now()-this.times[k])<this.C;}};
 
-function g(id){return document.getElementById(id);}
-function _safe(n){return n!=null&&isFinite(n)&&!isNaN(n);}
-function withTimeout(p,ms){return Promise.race([p,new Promise(function(_,r){setTimeout(function(){r(new Error('timeout'));},ms);})]);}
+var logCount = 0;
 function xlog(msg,type){
-  var el=g('loglist');if(!el)return;
-  var d=document.createElement('div');d.className='log-e '+(type||'info');
+  type=type||'info';
+  var el=document.getElementById('loglist');if(!el)return;
+  var d=document.createElement('div');d.className='log-e '+type;
   d.textContent='['+new Date().toTimeString().slice(0,8)+'] '+msg;
   el.insertBefore(d,el.firstChild);
   while(el.children.length>200)el.removeChild(el.lastChild);
+  logCount++;
 }
+
+function g(id){return document.getElementById(id);}
+function _safe(n){return n!=null&&isFinite(n)&&!isNaN(n);}
+function withTimeout(p,ms){return Promise.race([p,new Promise(function(_,r){setTimeout(function(){r(new Error('timeout'));},ms);})]);}
+
+// ═══════════════════════════════════════════
+// STATUS
+// ═══════════════════════════════════════════
 function setStatus(st){
   var dot=g('sdot'),txt=g('stxt');
-  if(dot)dot.className='sdot '+(st==='ok'?'ok':st==='scan'?'scan':'idle');
-  if(txt){txt.textContent=st==='ok'?'live':st==='scan'?'scanning...':'idle';
-    txt.style.color=st==='ok'?'var(--green)':st==='scan'?'var(--yellow)':'var(--text3)';}
+  var map={idle:['idle','idle'],scan:['scan','scanning...'],ok:['ok','live'],error:['idle','error']};
+  var v=map[st]||map.idle;
+  if(dot)dot.className='sdot '+v[0];
+  if(txt){txt.textContent=v[1];txt.style.color=st==='ok'?'var(--green)':st==='scan'?'var(--yellow)':'var(--text3)';}
 }
 
-// ════════════════════════════════════
-// WEBSOCKET FEEDS (10 exchanges)
-// ════════════════════════════════════
-function wsConnect(name,url,onOpen,onMsg,reconnectDelay){
-  var ws=new WebSocket(url);
-  WS_CONNS[name]=ws;
-  ws.onopen=function(){updateExDot(name,'live');if(onOpen)onOpen(ws);};
-  ws.onmessage=function(e){try{onMsg(JSON.parse(e.data));}catch(e2){}};
-  ws.onerror=function(){updateExDot(name,'error');};
-  ws.onclose=function(){updateExDot(name,'error');WS_CONNS[name]=null;
-    if(S.running)setTimeout(function(){wsConnect(name,url,onOpen,onMsg,reconnectDelay);},reconnectDelay||6000);};
-  return ws;
-}
-
-// Varianta pentru exchange-uri care trimit gzip (HTX/Huobi)
-function wsConnectGzip(name,url,onOpen,onMsg,reconnectDelay){
-  var ws=new WebSocket(url);
-  WS_CONNS[name]=ws;
-  ws.binaryType='blob';
-  ws.onopen=function(){updateExDot(name,'live');if(onOpen)onOpen(ws);};
-  ws.onmessage=function(e){
-    if(typeof e.data==='string'){
-      try{onMsg(JSON.parse(e.data));}catch(ex){}
-      return;
-    }
-    // Gzip Blob — decompress
-    if(typeof DecompressionStream==='undefined'){
-      // Fallback: try as text
-      var fr=new FileReader();
-      fr.onload=function(){try{onMsg(JSON.parse(fr.result));}catch(ex){}};
-      fr.readAsText(e.data);
-      return;
-    }
-    var ds=new DecompressionStream('gzip');
-    var w=e.data.stream().pipeThrough(ds);
-    new Response(w).text().then(function(txt){
-      try{onMsg(JSON.parse(txt));}catch(ex){}
-    }).catch(function(){});
-  };
-  ws.onerror=function(){updateExDot(name,'error');};
-  ws.onclose=function(){updateExDot(name,'error');WS_CONNS[name]=null;
-    if(S.running)setTimeout(function(){wsConnectGzip(name,url,onOpen,onMsg,reconnectDelay);},reconnectDelay||6000);
-  };
-  return ws;
-}
-
-
-
-// ═══════════════════════════════════════════════════
-// AUTO-DISCOVERY: fetch coin lists from exchanges at startup
-// Merges with static COINS list for maximum coverage
-// ═══════════════════════════════════════════════════
-var COINS_LOADED = false;
-
-function discoverCoins(callback){
-  // Binance, Bybit, OKX au CORS deschis pentru browsere
-  // Gate.io, MEXC, KuCoin, Bitget blochează CORS → folosim doar lista statică pentru ele
-  var bad = new Set([
-    'USDT','USDC','BUSD','TUSD','USDD','USDP','DAI','FRAX','LUSD','GUSD',
-    'WBTC','WETH','WBNB','STETH','RETH','CBETH','WDOGE','WETC',
-    'PAXG','XAUT','LUNC','USTC','UST','FTT','LUNA','BVND','IDRT','UAH',
-    'AGEUR','EURC','EURT','BKRW','BIDR'
-  ]);
-  var validCoin = function(c){ return /^[A-Z][A-Z0-9]{1,7}$/.test(c) && !bad.has(c); };
-  var discovered = new Set(COINS);
-  var done = 0, total = 3;
-  var finish = function(){
-    done++;
-    if(done>=total){
-      var prev = COINS.length;
-      COINS = Array.from(discovered).filter(validCoin).sort();
-      xlog('🔍 Auto-discovery: '+COINS.length+' monede (+'+(COINS.length-prev)+' noi din Binance/Bybit/OKX)','ok');
-      COINS_LOADED = true;
-      callback();
-    }
-  };
-
-  // Binance — permite CORS ✓
-  fetch('https://api.binance.com/api/v3/exchangeInfo')
-    .then(function(r){return r.json();})
-    .then(function(d){
-      (d.symbols||[]).forEach(function(s){
-        if(s.status==='TRADING' && (s.quoteAsset==='USDT'||s.quoteAsset==='USDC'))
-          discovered.add(s.baseAsset);
-      });
-      finish();
-    }).catch(function(e){ xlog('Discovery Binance: '+e.message,'warn'); finish(); });
-
-  // Bybit — permite CORS ✓
-  fetch('https://api.bybit.com/v5/market/instruments-info?category=spot&limit=1000')
-    .then(function(r){return r.json();})
-    .then(function(d){
-      ((d.result||{}).list||[]).forEach(function(s){
-        if(s.status==='Trading' && (s.quoteCoin==='USDT'||s.quoteCoin==='USDC'))
-          discovered.add(s.baseCoin);
-      });
-      finish();
-    }).catch(function(e){ xlog('Discovery Bybit: '+e.message,'warn'); finish(); });
-
-  // OKX — permite CORS ✓
-  fetch('https://www.okx.com/api/v5/public/instruments?instType=SPOT')
-    .then(function(r){return r.json();})
-    .then(function(d){
-      (d.data||[]).forEach(function(s){
-        if(s.state==='live' && (s.quoteCcy==='USDT'||s.quoteCcy==='USDC'))
-          discovered.add(s.baseCcy);
-      });
-      finish();
-    }).catch(function(e){ xlog('Discovery OKX: '+e.message,'warn'); finish(); });
-
-  // Gate / MEXC / KuCoin → blochează CORS din browser fără proxy
-  // Dacă CORS_PROXY e setat, fetch-uiește și de la ele
-  if(CORS_PROXY){
-    fetch(CORS_PROXY+'?url='+encodeURIComponent('https://api.mexc.com/api/v3/exchangeInfo'))
-      .then(function(r){return r.json();})
-      .then(function(d){
-        (d.symbols||[]).forEach(function(s){
-          if(s.status==='ENABLED'&&(s.quoteAsset==='USDT'||s.quoteAsset==='USDC'))
-            discovered.add(s.baseAsset);
-        });
-      }).catch(function(){});
-
-    fetch(CORS_PROXY+'?url='+encodeURIComponent('https://api.gateio.ws/api/v4/spot/currency_pairs'))
-      .then(function(r){return r.json();})
-      .then(function(d){
-        (d||[]).forEach(function(s){
-          if(s.trade_status==='tradable'&&(s.quote==='USDT'||s.quote==='USDC'))
-            discovered.add(s.base);
-        });
-      }).catch(function(){});
-  }
-}
-
+// ═══════════════════════════════════════════
+// WEBSOCKET FEEDS
+// ═══════════════════════════════════════════
 function startWS_Binance(){
-  // Binance allows up to 1024 streams per connection; split COINS into chunks of 50
   var allSubs=COINS.map(function(c){return c.toLowerCase()+'usdt@depth5@100ms';});
   var chunks=[];for(var i=0;i<allSubs.length;i+=50)chunks.push(allSubs.slice(i,i+50));
   chunks.forEach(function(chunk,ci){
     wsConnect('binance'+(ci||''),'wss://stream.binance.com:9443/stream?streams='+chunk.join('/'),
-      function(){if(ci===0)xlog('WS Binance ✓ ('+COINS.length+' perechi)','ok');},
+      function(){if(ci===0){xlog('WS Binance ✓ ('+COINS.length+' perechi)','ok');updateExDot('binance','live');}},
       function(d){
         if(!d.data)return;var t=d.data;
-        // depth5 stream: stream name = symbol@depth5@100ms
         var stream=d.stream||'';
         var s=stream.split('@')[0].toUpperCase();
         var coin=null,quote=null;
@@ -719,94 +583,142 @@ function startWS_Binance(){
         if(!coin||!COINS.includes(coin))return;
         var bids=t.bids||[],asks=t.asks||[];
         if(!bids.length||!asks.length)return;
-        var bid=+bids[0][0],bidQty=+bids[0][1];
-        var ask=+asks[0][0],askQty=+asks[0][1];
-        // Sum top-3 qty for liquidity check
+        var bid=+bids[0][0],ask=+asks[0][0];
         var bidLiq=bids.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
         var askLiq=asks.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
-        if(bid>0&&ask>0)WS_PRICES[coin+'_'+quote+'_binance']={bid:bid,ask:ask,bidQty:bidQty,askQty:askQty,bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'binance',ts:Date.now()};
+        if(bid>0&&ask>0)WS_PRICES[coin+'_'+quote+'_binance']={bid:bid,ask:ask,bidQty:+bids[0][1],askQty:+asks[0][1],bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'binance',ts:Date.now()};
       },5000);
   });
 }
 
 function startWS_Bybit(){
-  // Bybit supports up to 10 topics per message; send in batches
   var allArgs=COINS.map(function(c){return 'orderbook.5.'+c+'USDT';});
-  wsConnect('bybit','wss://stream.bybit.com/v5/public/spot',
-    function(ws){
-      for(var i=0;i<allArgs.length;i+=10){
-        ws.send(JSON.stringify({op:'subscribe',args:allArgs.slice(i,i+10)}));
-      }
-      xlog('WS Bybit ✓ ('+COINS.length+' perechi)','ok');
-    },
-    function(d){
-      if(!d.topic||!d.data||!d.topic.startsWith('orderbook'))return;
-      var sym=d.topic.split('.')[2];
-      var coin=sym.replace('USDT','').replace('USDC',''),quote=sym.includes('USDC')?'USDC':'USDT';
-      var bids=d.data.b||[],asks=d.data.a||[];
-      var bid=+(bids[0]&&bids[0][0]||0),ask=+(asks[0]&&asks[0][0]||0);
-      var bidQty=+(bids[0]&&bids[0][1]||0),askQty=+(asks[0]&&asks[0][1]||0);
-      var bidLiq=bids.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
-      var askLiq=asks.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
-      if(bid>0&&ask>0&&COINS.indexOf(coin)>=0)WS_PRICES[coin+'_'+quote+'_bybit']={bid:bid,ask:ask,bidQty:bidQty,askQty:askQty,bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'bybit',ts:Date.now()};
-    },5000);
+  var chunks=[];for(var i=0;i<allArgs.length;i+=10)chunks.push(allArgs.slice(i,i+10));
+  chunks.forEach(function(chunk,ci){
+    wsConnect('bybit'+(ci||''),'wss://stream.bybit.com/v5/public/spot',
+      function(ws){
+        ws.send(JSON.stringify({op:'subscribe',args:chunk}));
+        if(ci===0){xlog('WS Bybit ✓ ('+COINS.length+' perechi)','ok');updateExDot('bybit','live');}
+      },
+      function(d){
+        if(!d.topic||!d.data||!d.topic.startsWith('orderbook'))return;
+        var sym=d.topic.split('.')[2];
+        var coin=sym.replace('USDT','').replace('USDC','');
+        var quote=sym.includes('USDC')?'USDC':'USDT';
+        var bids=d.data.b||[],asks=d.data.a||[];
+        var bid=+(bids[0]&&bids[0][0]||0),ask=+(asks[0]&&asks[0][0]||0);
+        var bidLiq=bids.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+        var askLiq=asks.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+        if(bid>0&&ask>0&&COINS.includes(coin))WS_PRICES[coin+'_'+quote+'_bybit']={bid:bid,ask:ask,bidQty:+(bids[0]&&bids[0][1]||0),askQty:+(asks[0]&&asks[0][1]||0),bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'bybit',ts:Date.now()};
+      },5000);
+  });
 }
 
 function startWS_OKX(){
-  // OKX: send all coins in batches of 30
   var allArgs=COINS.map(function(c){return {channel:'books5',instId:c+'-USDT'};});
-  wsConnect('okx','wss://ws.okx.com:8443/ws/v5/public',
-    function(ws){
-      for(var i=0;i<allArgs.length;i+=30){
-        ws.send(JSON.stringify({op:'subscribe',args:allArgs.slice(i,i+30)}));
-      }
-      xlog('WS OKX ✓ ('+COINS.length+' perechi)','ok');
-    },
-    function(d){
-      if(!d.data||!d.data[0]||!d.arg||d.arg.channel!=='books5')return;
-      var t=d.data[0],parts=(d.arg.instId||'').split('-');if(parts.length<2)return;
-      var coin=parts[0],quote=parts[1];
-      var bids=t.bids||[],asks=t.asks||[];
-      var bid=+(bids[0]&&bids[0][0]||0),ask=+(asks[0]&&asks[0][0]||0);
-      var bidQty=+(bids[0]&&bids[0][1]||0),askQty=+(asks[0]&&asks[0][1]||0);
-      var bidLiq=bids.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
-      var askLiq=asks.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
-      if(bid>0&&ask>0&&COINS.indexOf(coin)>=0&&ACTIVE_QUOTES[quote])WS_PRICES[coin+'_'+quote+'_okx']={bid:bid,ask:ask,bidQty:bidQty,askQty:askQty,bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'okx',ts:Date.now()};
-    },8000);
+  var chunks=[];for(var i=0;i<allArgs.length;i+=30)chunks.push(allArgs.slice(i,i+30));
+  chunks.forEach(function(chunk,ci){
+    wsConnect('okx'+(ci||''),'wss://ws.okx.com:8443/ws/v5/public',
+      function(ws){
+        ws.send(JSON.stringify({op:'subscribe',args:chunk}));
+        if(ci===0){xlog('WS OKX ✓ ('+COINS.length+' perechi)','ok');updateExDot('okx','live');}
+      },
+      function(d){
+        if(!d.data||!d.data[0]||!d.arg||d.arg.channel!=='books5')return;
+        var t=d.data[0];
+        var parts=(d.arg.instId||'').split('-');if(parts.length<2)return;
+        var coin=parts[0],quote=parts[1];
+        var bids=t.bids||[],asks=t.asks||[];
+        var bid=+(bids[0]&&bids[0][0]||0),ask=+(asks[0]&&asks[0][0]||0);
+        var bidLiq=bids.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+        var askLiq=asks.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+        if(bid>0&&ask>0&&COINS.includes(coin)&&ACTIVE_QUOTES[quote])WS_PRICES[coin+'_'+quote+'_okx']={bid:bid,ask:ask,bidQty:+(bids[0]&&bids[0][1]||0),askQty:+(asks[0]&&asks[0][1]||0),bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'okx',ts:Date.now()};
+      },8000);
+  });
 }
 
 function startWS_Coinbase(){
-  var pairs=['BTC-USD','ETH-USD','SOL-USD','XRP-USD','DOGE-USD','LTC-USD','LINK-USD','AVAX-USD','ADA-USD','BTC-USDC','ETH-USDC','SOL-USDC','XRP-USDC','DOGE-USDC','LTC-USDC'];
-  wsConnect('coinbase','wss://ws-feed.exchange.coinbase.com',
-    function(ws){ws.send(JSON.stringify({type:'subscribe',product_ids:pairs,channels:['ticker']}));xlog('WS Coinbase ✓','ok');},
-    function(d){
+  var ws = new WebSocket('wss://ws-feed.exchange.coinbase.com');
+  WS_CONNS.coinbase = ws;
+  var pairs = ['BTC-USD','ETH-USD','SOL-USD','XRP-USD','DOGE-USD','LTC-USD','LINK-USD','AVAX-USD','ADA-USD',
+    'BTC-USDC','ETH-USDC','SOL-USDC','XRP-USDC','DOGE-USDC'];
+  ws.onopen = function(){
+    ws.send(JSON.stringify({type:'subscribe',product_ids:pairs,channels:['ticker']}));
+    xlog('WS Coinbase: conectat','ok');updateExDot('coinbase','live');
+  };
+  ws.onmessage = function(e){
+    try{var d=JSON.parse(e.data);
       if(d.type!=='ticker'||!d.product_id||!d.best_bid)return;
       var p=d.product_id.split('-');if(p.length<2)return;
-      var coin=p[0],quote=p[1],bid=+(d.best_bid||0),ask=+(d.best_ask||0);
-      if(bid>0&&ask>0&&COINS.indexOf(coin)>=0&&ACTIVE_QUOTES[quote])WS_PRICES[coin+'_'+quote+'_coinbase']={bid:bid,ask:ask,coin:coin,quote:quote,ex:'coinbase',ts:Date.now()};
-    },5000);
+      var coin=p[0],quote=p[1];
+      var bid=+(d.best_bid||0),ask=+(d.best_ask||0);
+      if(bid>0&&ask>0) WS_PRICES[coin+'_'+quote+'_coinbase']={bid:bid,ask:ask,coin:coin,quote:quote,ex:'coinbase',ts:Date.now()};
+    }catch(err){}
+  };
+  ws.onerror = function(){updateExDot('coinbase','error');};
+  ws.onclose = function(){updateExDot('coinbase','error');
+    if(S.running)setTimeout(function(){startWS_Coinbase();},5000);};
 }
 
 function startWS_Kraken(){
+  var ws = new WebSocket('wss://ws.kraken.com');
+  WS_CONNS.kraken = ws;
   var pairs=['XBT/USD','ETH/USD','SOL/USD','XRP/USD','DOGE/USD','LTC/USD','LINK/USD','DOT/USD','ADA/USD','XBT/EUR','ETH/EUR'];
-  wsConnect('kraken','wss://ws.kraken.com',
-    function(ws){ws.send(JSON.stringify({event:'subscribe',pair:pairs,subscription:{name:'ticker'}}));xlog('WS Kraken ✓','ok');},
-    function(d){
+  ws.onopen = function(){
+    ws.send(JSON.stringify({event:'subscribe',pair:pairs,subscription:{name:'ticker'}}));
+    xlog('WS Kraken: conectat','ok');updateExDot('kraken','live');
+  };
+  ws.onmessage = function(e){
+    try{var d=JSON.parse(e.data);
       if(!Array.isArray(d)||d.length<4||d[2]!=='ticker')return;
-      var t=d[1],pairStr=d[3];if(!t||!t.b||!t.a)return;
+      var t=d[1],pairStr=d[3];
+      if(!t||!t.b||!t.a||!pairStr)return;
       var parts=pairStr.split('/');if(parts.length<2)return;
-      var coin=parts[0]==='XBT'?'BTC':parts[0],quote=parts[1]==='USD'?'USD':'EUR';
+      var coin=parts[0]==='XBT'?'BTC':parts[0];
+      var quote=parts[1]==='USD'?'USD':'EUR';
       var bid=+(t.b[0]||0),ask=+(t.a[0]||0);
-      if(bid>0&&ask>0&&ACTIVE_QUOTES[quote])WS_PRICES[coin+'_'+quote+'_kraken']={bid:bid,ask:ask,coin:coin,quote:quote,ex:'kraken',ts:Date.now()};
-    },8000);
+      if(bid>0&&ask>0&&ACTIVE_QUOTES[quote]) WS_PRICES[coin+'_'+quote+'_kraken']={bid:bid,ask:ask,coin:coin,quote:quote,ex:'kraken',ts:Date.now()};
+    }catch(err){}
+  };
+  ws.onerror=function(){updateExDot('kraken','error');};
+  ws.onclose=function(){updateExDot('kraken','error');
+    if(S.running)setTimeout(function(){startWS_Kraken();},8000);};
 }
 
+// ════════════════════════════════════
+// wsConnectGzip — pentru HTX/BitMart (trimite gzip)
+// ════════════════════════════════════
+function wsConnectGzip(name,url,onOpen,onMsg,reconnectDelay){
+  var ws=new WebSocket(url);
+  WS_CONNS[name]=ws;
+  ws.binaryType='blob';
+  ws.onopen=function(){updateExDot(name,'live');if(onOpen)onOpen(ws);};
+  ws.onmessage=function(e){
+    if(typeof e.data==='string'){try{onMsg(JSON.parse(e.data));}catch(ex){}return;}
+    if(typeof DecompressionStream==='undefined'){
+      var fr=new FileReader();
+      fr.onload=function(){try{onMsg(JSON.parse(fr.result));}catch(ex){}};
+      fr.readAsText(e.data);return;
+    }
+    var ds=new DecompressionStream('gzip');
+    new Response(e.data.stream().pipeThrough(ds)).text()
+      .then(function(t){try{onMsg(JSON.parse(t));}catch(ex){}})
+      .catch(function(){});
+  };
+  ws.onerror=function(){updateExDot(name,'error');};
+  ws.onclose=function(){updateExDot(name,'error');WS_CONNS[name]=null;
+    if(S.running)setTimeout(function(){wsConnectGzip(name,url,onOpen,onMsg,reconnectDelay);},reconnectDelay||6000);
+  };
+  return ws;
+}
+
+// ════════════════════════════════════
+// KuCoin WebSocket (token via REST)
+// ════════════════════════════════════
 function startWS_KuCoin(){
-  withTimeout(
-    CORS_PROXY
-      ? fetch(CORS_PROXY+'?url='+encodeURIComponent('https://api.kucoin.com/api/v1/bullet-public'),{method:'POST',cache:'no-store'})
-      : fetch('https://api.kucoin.com/api/v1/bullet-public',{method:'POST',cache:'no-store'}),
-    8000)
+  var tokenUrl='https://api.kucoin.com/api/v1/bullet-public';
+  var fetchUrl=CORS_PROXY?CORS_PROXY+'?url='+encodeURIComponent(tokenUrl):tokenUrl;
+  withTimeout(fetch(fetchUrl,{method:'POST',cache:'no-store'}),8000)
     .then(function(r){return r.json();})
     .then(function(d){
       if(d.code!=='200000'||!d.data)throw new Error('token fail');
@@ -817,139 +729,145 @@ function startWS_KuCoin(){
       ws.onopen=function(){
         xlog('WS KuCoin ✓','ok');updateExDot('kucoin','live');
         var syms=COINS.map(function(c){return c+'-USDT';});
-        ws.send(JSON.stringify({id:'1',type:'subscribe',topic:'/market/ticker:'+syms.join(','),privateChannel:false,response:true}));
-        pt=setInterval(function(){if(ws.readyState===1)ws.send(JSON.stringify({id:'p',type:'ping'}));},inst.pingInterval||18000);
+        for(var i=0;i<syms.length;i+=100){
+          ws.send(JSON.stringify({id:Date.now(),type:'subscribe',topic:'/spotMarket/level2Depth5:'+syms.slice(i,i+100).join(','),privateChannel:false,response:true}));
+        }
+        pt=setInterval(function(){if(ws.readyState===1)ws.send(JSON.stringify({id:Date.now(),type:'ping'}));},25000);
       };
       ws.onmessage=function(e){
-        try{var d=JSON.parse(e.data);if(d.type==='pong'||d.type!=='message'||!d.data)return;
-          var t=d.data,parts=(d.subject||'').split('-');if(parts.length<2)return;
-          var coin=parts[0],quote=parts[1],bid=+(t.bestBid||0),ask=+(t.bestAsk||0);
-          if(bid>0&&ask>0&&COINS.indexOf(coin)>=0&&ACTIVE_QUOTES[quote])WS_PRICES[coin+'_'+quote+'_kucoin']={bid:bid,ask:ask,coin:coin,quote:quote,ex:'kucoin',ts:Date.now()};
+        try{
+          var d2=JSON.parse(e.data);
+          if(d2.type!=='message'||!d2.data)return;
+          var parts=(d2.topic||'').split(':');
+          var sym=parts[1]||'';var sp=sym.split('-');
+          var coin=sp[0],quote=sp[1]||'USDT';
+          if(!COINS.includes(coin)||!ACTIVE_QUOTES[quote])return;
+          var bids=d2.data.bids||[],asks=d2.data.asks||[];
+          if(!bids.length||!asks.length)return;
+          var bid=+bids[0][0],ask=+asks[0][0];
+          var bidLiq=bids.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+          var askLiq=asks.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+          if(bid>0&&ask>0)WS_PRICES[coin+'_'+quote+'_kucoin']={bid:bid,ask:ask,bidQty:+bids[0][1],askQty:+asks[0][1],bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'kucoin',ts:Date.now()};
         }catch(e2){}
       };
       ws.onerror=function(){updateExDot('kucoin','error');if(pt)clearInterval(pt);};
       ws.onclose=function(){updateExDot('kucoin','error');WS_CONNS.kucoin=null;if(pt)clearInterval(pt);
-        if(S.running)setTimeout(startWS_KuCoin,10000);};
-    }).catch(function(e){xlog('KuCoin: CORS blocat pe file:// - skip','warn');updateExDot('kucoin','error');CB.fail('kucoin');CB.fail('kucoin');CB.fail('kucoin');});
+        if(S.running)setTimeout(startWS_KuCoin,8000);};
+    }).catch(function(e){xlog('KuCoin: CORS blocat · setează ⚡ PROXY','warn');updateExDot('kucoin','error');});
 }
 
+// ════════════════════════════════════
+// Gate.io WebSocket
+// ════════════════════════════════════
 function startWS_Gate(){
   var syms=COINS.map(function(c){return c+'_USDT';});
   wsConnect('gate','wss://api.gateio.ws/ws/v4/',
-    function(ws){ws.send(JSON.stringify({time:Math.floor(Date.now()/1000),channel:'spot.order_book',event:'subscribe',payload:syms.map(function(s){return [s,'5','100ms'];})}));xlog('WS Gate.io ✓','ok');},
+    function(ws){
+      ws.send(JSON.stringify({time:Math.floor(Date.now()/1000),channel:'spot.order_book',event:'subscribe',payload:syms.slice(0,100).map(function(s){return [s,'5','100ms'];})}));
+      xlog('WS Gate.io ✓','ok');
+    },
     function(d){
       if(d.channel!=='spot.order_book'||d.event!=='update'||!d.result)return;
       var t=d.result,parts=(t.s||'').split('_');if(parts.length<2)return;
       var coin=parts[0],quote=parts[1];
+      if(!COINS.includes(coin)||!ACTIVE_QUOTES[quote])return;
       var bids=t.bids||[],asks=t.asks||[];
-      var bid=+(bids[0]&&bids[0][0]||0),ask=+(asks[0]&&asks[0][0]||0);
-      var bidQty=+(bids[0]&&bids[0][1]||0),askQty=+(asks[0]&&asks[0][1]||0);
+      if(!bids.length||!asks.length)return;
+      var bid=+bids[0][0],ask=+asks[0][0];
       var bidLiq=bids.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
       var askLiq=asks.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
-      if(bid>0&&ask>0&&COINS.indexOf(coin)>=0&&ACTIVE_QUOTES[quote])WS_PRICES[coin+'_'+quote+'_gate']={bid:bid,ask:ask,bidQty:bidQty,askQty:askQty,bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'gate',ts:Date.now()};
+      if(bid>0&&ask>0)WS_PRICES[coin+'_'+quote+'_gate']={bid:bid,ask:ask,bidQty:+bids[0][1],askQty:+asks[0][1],bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'gate',ts:Date.now()};
     },6000);
 }
 
+// ════════════════════════════════════
+// MEXC WebSocket
+// ════════════════════════════════════
 function startWS_MEXC(){
-  var coins=COINS.slice();
+  var coins=COINS.slice(0,200);
   wsConnect('mexc','wss://wbs.mexc.com/ws',
     function(ws){
-      xlog('WS MEXC ✓','ok');
       coins.forEach(function(c){ws.send(JSON.stringify({method:'SUBSCRIPTION',params:['spot@public.limit.depth.v3.api@'+c+'USDT@5']}));});
+      xlog('WS MEXC ✓','ok');
     },
     function(d){
       if(!d.d||!d.s)return;
       var s=d.s,coin=null,quote=null;
       if(s.endsWith('USDT')){coin=s.slice(0,-4);quote='USDT';}
       else if(s.endsWith('USDC')){coin=s.slice(0,-4);quote='USDC';}
-      if(!coin||COINS.indexOf(coin)<0||!ACTIVE_QUOTES[quote])return;
-      // depth format: d.asks=[[price,qty],...], d.bids=[[price,qty],...]
-      var bids=d.d.bids||d.d.asks?d.d.bids:[]; // fallback
-      var asks_=d.d.asks||[];
-      var bid=+(bids&&bids[0]?bids[0][0]:d.d.b||0);
-      var ask=+(asks_&&asks_[0]?asks_[0][0]:d.d.a||0);
-      var bidQty=+(bids&&bids[0]?bids[0][1]:0);
-      var askQty=+(asks_&&asks_[0]?asks_[0][1]:0);
-      var bidLiq=bids?bids.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0):bid*bidQty;
-      var askLiq=asks_?asks_.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0):ask*askQty;
-      if(bid>0&&ask>0)WS_PRICES[coin+'_'+quote+'_mexc']={bid:bid,ask:ask,bidQty:bidQty,askQty:askQty,bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'mexc',ts:Date.now()};
+      if(!coin||!COINS.includes(coin)||!ACTIVE_QUOTES[quote])return;
+      var bids=d.d.bids||[],asks_=d.d.asks||[];
+      var bid=+(bids[0]?bids[0][0]:0),ask=+(asks_[0]?asks_[0][0]:0);
+      var bidLiq=bids.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+      var askLiq=asks_.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+      if(bid>0&&ask>0)WS_PRICES[coin+'_'+quote+'_mexc']={bid:bid,ask:ask,bidQty:+(bids[0]?bids[0][1]:0),askQty:+(asks_[0]?asks_[0][1]:0),bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'mexc',ts:Date.now()};
     },6000);
 }
 
+// ════════════════════════════════════
+// BingX WebSocket (gzip)
+// ════════════════════════════════════
 function startWS_BingX(){
-  var coins=COINS.slice();
-  wsConnect('bingx','wss://open-api-ws.bingx.com/market',
+  var coins=COINS.slice(0,150);
+  wsConnectGzip('bingx','wss://open-api-ws.bingx.com/market',
     function(ws){
+      coins.forEach(function(c){ws.send(JSON.stringify({id:Date.now()+'',dataType:c+'-USDT@bookTicker',reqType:'sub'}));});
       xlog('WS BingX ✓','ok');
-      coins.forEach(function(c){ws.send(JSON.stringify({id:c,reqType:'sub',dataType:c+'-USDT@bookTicker'}));});
     },
     function(d){
-      // BingX message parse
-      if(!d.data||!d.dataType)return;
-      var parts=(d.dataType||'').split('@')[0].split('-');if(parts.length<2)return;
-      var coin=parts[0],quote=parts[1],bid=+(d.data.bidPrice||0),ask=+(d.data.askPrice||0);
-      if(bid>0&&ask>0&&COINS.indexOf(coin)>=0&&ACTIVE_QUOTES[quote])WS_PRICES[coin+'_'+quote+'_bingx']={bid:bid,ask:ask,coin:coin,quote:quote,ex:'bingx',ts:Date.now()};
+      if(!d||!d.dataType||!d.dataType.endsWith('@bookTicker'))return;
+      var parts=d.dataType.split('@')[0].split('-');
+      var coin=parts[0],quote=parts[1]||'USDT';
+      if(!COINS.includes(coin)||!ACTIVE_QUOTES[quote])return;
+      var dat=d.data||{};
+      var bid=+dat.b||+dat.bidPrice||0,ask=+dat.a||+dat.askPrice||0;
+      if(bid>0&&ask>0)WS_PRICES[coin+'_'+quote+'_bingx']={bid:bid,ask:ask,bidQty:+(dat.B||dat.bidQty||0),askQty:+(dat.A||dat.askQty||0),bidLiq:0,askLiq:0,coin:coin,quote:quote,ex:'bingx',ts:Date.now()};
     },7000);
-  // BingX sends gzip blobs — override onmessage to handle both
-  var _ws=WS_CONNS.bingx;
-  if(_ws){
-    _ws.onmessage=function(e){
-      var parse=function(txt){try{var d=JSON.parse(txt);if(!d.data||!d.dataType)return;var parts=(d.dataType||'').split('@')[0].split('-');if(parts.length<2)return;var coin=parts[0],quote=parts[1],bid=+(d.data.bidPrice||0),ask=+(d.data.askPrice||0);if(bid>0&&ask>0&&COINS.indexOf(coin)>=0&&ACTIVE_QUOTES[quote])WS_PRICES[coin+'_'+quote+'_bingx']={bid:bid,ask:ask,coin:coin,quote:quote,ex:'bingx',ts:Date.now()};}catch(e2){}};
-      var raw=e.data;
-      if(typeof raw==='string'){parse(raw);}
-      else if(raw instanceof Blob){raw.arrayBuffer().then(function(buf){try{var ds=new DecompressionStream('gzip');new Response(new Blob([buf]).stream().pipeThrough(ds)).text().then(parse).catch(function(){});}catch(e2){}}).catch(function(){});}
-    };
-  }
 }
 
+// ════════════════════════════════════
+// Crypto.com WebSocket
+// ════════════════════════════════════
 function startWS_CryptoCom(){
-  var coins=COINS.slice();
-  var pt=null;
+  var coins=COINS.slice(0,100);
   wsConnect('cryptocom','wss://stream.crypto.com/exchange/v1/market',
     function(ws){
-      var channels=coins.map(function(c){return 'ticker.'+c+'_USDT';});
-      // Send in batches of 30
-      for(var i=0;i<channels.length;i+=30){
-        ws.send(JSON.stringify({id:i+1,method:'subscribe',params:{channels:channels.slice(i,i+30)}}));
-      }
-      xlog('WS Crypto.com ✓ ('+coins.length+' perechi)','ok');
-      pt=setInterval(function(){if(ws.readyState===1)ws.send(JSON.stringify({id:0,method:'public/heartbeat'}));},25000);
+      var subs=coins.map(function(c){return {instrument_name:c+'_USDT',subscription:'book.'+c+'_USDT.5',channel:'book',depth:5};});
+      ws.send(JSON.stringify({id:1,method:'subscribe',params:{channels:coins.map(function(c){return 'book.'+c+'_USDT.5';})}}));
+      xlog('WS Crypto.com ✓','ok');
+      setInterval(function(){if(ws.readyState===1)ws.send(JSON.stringify({id:Date.now(),method:'public/heartbeat',params:{}}));},25000);
     },
     function(d){
-      if(d.method==='public/heartbeat'){var ws=WS_CONNS.cryptocom;if(ws&&ws.readyState===1)ws.send(JSON.stringify({id:d.id,method:'public/respond-heartbeat'}));return;}
+      if(d.method==='public/heartbeat'){return;}
       if(!d.result||!d.result.data)return;
-      var inst=d.result.instrument_name||'',parts=inst.split('_');if(parts.length<2)return;
+      var dat=d.result.data[0];if(!dat)return;
+      var inst=(d.result.instrument_name||d.result.subscription||'').split('.')[1]||'';
+      var parts=inst.split('_');if(parts.length<2)return;
       var coin=parts[0],quote=parts[1];
-      d.result.data.forEach(function(t){
-        var bid=+(t.b||t.bid||0),ask=+(t.k||t.ask||0);
-        if(bid>0&&ask>0&&COINS.indexOf(coin)>=0&&ACTIVE_QUOTES[quote])WS_PRICES[coin+'_'+quote+'_cryptocom']={bid:bid,ask:ask,coin:coin,quote:quote,ex:'cryptocom',ts:Date.now()};
-      });
+      if(!COINS.includes(coin)||!ACTIVE_QUOTES[quote])return;
+      var bids=dat.bids||[],asks=dat.asks||[];
+      if(!bids.length||!asks.length)return;
+      var bid=+bids[0][0],ask=+asks[0][0];
+      var bidLiq=bids.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+      var askLiq=asks.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
+      if(bid>0&&ask>0)WS_PRICES[coin+'_'+quote+'_cryptocom']={bid:bid,ask:ask,bidQty:+bids[0][1],askQty:+asks[0][1],bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'cryptocom',ts:Date.now()};
     },8000);
 }
 
-function stopAllWS(){Object.keys(WS_CONNS).forEach(function(k){try{if(WS_CONNS[k])WS_CONNS[k].close();}catch(e){}WS_CONNS[k]=null;});}
-
 // ════════════════════════════════════
-// HTX (fostul Huobi) WebSocket
-// Folosește gzip compression — need DecompressionStream
+// HTX WebSocket (fostul Huobi, gzip)
 // ════════════════════════════════════
 function startWS_HTX(){
-  // HTX market.depth.step5 = top 5 nivele cu qty
-  // Subscriu batch-uri de 30 simboluri per conexiune
-  var allSubs=COINS.map(function(c){return 'market.'+c.toLowerCase()+'usdt.depth.step5';});
+  var allSubs=COINS.slice(0,150).map(function(c){return 'market.'+c.toLowerCase()+'usdt.depth.step5';});
   var chunks=[];for(var i=0;i<allSubs.length;i+=30)chunks.push(allSubs.slice(i,i+30));
   chunks.forEach(function(chunk,ci){
     wsConnectGzip('htx'+(ci||''),'wss://api.huobi.pro/ws',
       function(ws){
-        chunk.forEach(function(sub){
-          ws.send(JSON.stringify({sub:sub,id:'arb'+Date.now()}));
-        });
-        if(ci===0)xlog('WS HTX ✓ ('+COINS.length+' perechi)','ok');
-        updateExDot('htx','live');
+        chunk.forEach(function(sub){ws.send(JSON.stringify({sub:sub,id:'arb'+Date.now()}));});
+        if(ci===0){xlog('WS HTX ✓','ok');updateExDot('htx','live');}
       },
       function(msg){
         if(!msg)return;
-        // Heartbeat ping/pong
         if(msg.ping){
           Object.keys(WS_CONNS).forEach(function(k){
             if(k.startsWith('htx')&&WS_CONNS[k]&&WS_CONNS[k].readyState===1)
@@ -958,28 +876,25 @@ function startWS_HTX(){
           return;
         }
         if(!msg.ch||!msg.tick)return;
-        var parts=msg.ch.split('.');
-        var sym=(parts[1]||'').toUpperCase();
+        var sym=(msg.ch.split('.')[1]||'').toUpperCase();
         var coin=null,quote=null;
         if(sym.endsWith('USDT')){coin=sym.slice(0,-4);quote='USDT';}
-        else if(sym.endsWith('USDC')){coin=sym.slice(0,-4);quote='USDC';}
-        if(!coin||COINS.indexOf(coin)<0)return;
+        if(!coin||!COINS.includes(coin))return;
         var bids=msg.tick.bids||[],asks=msg.tick.asks||[];
         if(!bids.length||!asks.length)return;
         var bid=+bids[0][0],ask=+asks[0][0];
-        var bidQty=+bids[0][1],askQty=+asks[0][1];
         var bidLiq=bids.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
         var askLiq=asks.slice(0,3).reduce(function(s,l){return s+(+l[0])*(+l[1]);},0);
-        if(bid>0&&ask>0)WS_PRICES[coin+'_'+quote+'_htx']={bid:bid,ask:ask,bidQty:bidQty,askQty:askQty,bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'htx',ts:Date.now()};
+        if(bid>0&&ask>0)WS_PRICES[coin+'_'+quote+'_htx']={bid:bid,ask:ask,bidQty:+bids[0][1],askQty:+asks[0][1],bidLiq:bidLiq,askLiq:askLiq,coin:coin,quote:quote,ex:'htx',ts:Date.now()};
       },8000);
   });
 }
 
 // ════════════════════════════════════
-// BitMart WebSocket
+// BitMart WebSocket (gzip)
 // ════════════════════════════════════
 function startWS_BitMart(){
-  var allArgs=COINS.map(function(c){return 'spot/depth5:'+c+'_USDT';});
+  var allArgs=COINS.slice(0,100).map(function(c){return 'spot/depth5:'+c+'_USDT';});
   var chunks=[];for(var i=0;i<allArgs.length;i+=20)chunks.push(allArgs.slice(i,i+20));
   chunks.forEach(function(chunk,ci){
     wsConnectGzip('bitmart'+(ci||''),'wss://ws-manager-compress.bitmart.com/api?protocol=1.1',
@@ -996,8 +911,7 @@ function startWS_BitMart(){
         var parts=symPart.split('_');if(parts.length<2)return;
         var coin=parts[0],quote=parts[1];
         if(!COINS.includes(coin)||!ACTIVE_QUOTES[quote])return;
-        var bids=data.buys||data.bids||[];
-        var asks=data.sells||data.asks||[];
+        var bids=data.buys||data.bids||[],asks=data.sells||data.asks||[];
         if(!bids.length||!asks.length)return;
         var getP=function(l){return +(Array.isArray(l)?l[0]:l.price||0);};
         var getQ=function(l){return +(Array.isArray(l)?l[1]:l.amount||0);};
@@ -1009,15 +923,70 @@ function startWS_BitMart(){
   });
 }
 
-// ════════════════════════════════════
-// REST FETCHERS (Bitget + WEX)
-// ════════════════════════════════════
+
+function stopAllWS(){
+  Object.keys(WS_CONNS).forEach(function(k){try{WS_CONNS[k].close();}catch(e){}WS_CONNS[k]=null;});
+}
+
+// ═══════════════════════════════════════════
+// REST FETCHERS
+// ═══════════════════════════════════════════
+function fetchBinanceRest(){
+  return withTimeout(fetch('https://api.binance.com/api/v3/ticker/bookTicker',{cache:'no-store'}),8000)
+    .then(function(r){return r.json();}).then(function(list){
+      var o={};
+      list.forEach(function(t){
+        var s=t.symbol,coin=null,quote=null;
+        if(s.endsWith('USDT')){coin=s.slice(0,-4);quote='USDT';}
+        else if(s.endsWith('USDC')){coin=s.slice(0,-4);quote='USDC';}
+        if(coin&&COINS.indexOf(coin)>=0&&ACTIVE_QUOTES[quote]&&+t.bidPrice>0)
+          o[coin+'_'+quote+'_binance']={bid:+t.bidPrice,ask:+t.askPrice,coin:coin,quote:quote,ex:'binance',ts:Date.now()};
+      });return o;
+    });
+}
+function fetchBybitRest(){
+  return withTimeout(fetch('https://api.bybit.com/v5/market/tickers?category=spot',{cache:'no-store'}),8000)
+    .then(function(r){return r.json();}).then(function(d){
+      if(d.retCode!==0)throw new Error(d.retMsg);
+      var o={};
+      (d.result.list||[]).forEach(function(t){
+        var s=t.symbol,coin=null,quote=null;
+        if(s.endsWith('USDT')){coin=s.slice(0,-4);quote='USDT';}
+        else if(s.endsWith('USDC')){coin=s.slice(0,-4);quote='USDC';}
+        if(coin&&COINS.indexOf(coin)>=0&&ACTIVE_QUOTES[quote]&&t.bid1Price)
+          o[coin+'_'+quote+'_bybit']={bid:+t.bid1Price,ask:+t.ask1Price,coin:coin,quote:quote,ex:'bybit',ts:Date.now()};
+      });return o;
+    });
+}
+function fetchGateRest(){
+  return withTimeout(fetch('https://api.gateio.ws/api/v4/spot/tickers',{cache:'no-store'}),9000)
+    .then(function(r){return r.json();}).then(function(list){
+      var o={};
+      list.forEach(function(t){
+        var pair=t.currency_pair||'',coin=null,quote=null;
+        if(pair.endsWith('_USDT')){coin=pair.slice(0,-5);quote='USDT';}
+        else if(pair.endsWith('_USDC')){coin=pair.slice(0,-5);quote='USDC';}
+        if(!coin||COINS.indexOf(coin)<0||!ACTIVE_QUOTES[quote])return;
+        var bid=+(t.highest_bid||0),ask=+(t.lowest_ask||0);
+        if(bid>0&&ask>0)o[coin+'_'+quote+'_gate']={bid:bid,ask:ask,coin:coin,quote:quote,ex:'gate',ts:Date.now()};
+      });return o;
+    });
+}
+function fetchMexcRest(){
+  return withTimeout(fetch('https://api.mexc.com/api/v3/ticker/bookTicker',{cache:'no-store'}),9000)
+    .then(function(r){return r.json();}).then(function(list){
+      var o={};
+      list.forEach(function(t){
+        var s=t.symbol,coin=null,quote=null;
+        if(s.endsWith('USDT')){coin=s.slice(0,-4);quote='USDT';}
+        else if(s.endsWith('USDC')){coin=s.slice(0,-4);quote='USDC';}
+        if(coin&&COINS.indexOf(coin)>=0&&ACTIVE_QUOTES[quote]&&+t.bidPrice>0)
+          o[coin+'_'+quote+'_mexc']={bid:+t.bidPrice,ask:+t.askPrice,coin:coin,quote:quote,ex:'mexc',ts:Date.now()};
+      });return o;
+    });
+}
 function fetchBitgetRest(){
-  return withTimeout(
-    CORS_PROXY
-      ? fetch(CORS_PROXY+'?url='+encodeURIComponent('https://api.bitget.com/api/v2/spot/market/tickers'),{cache:'no-store'})
-      : fetch('https://api.bitget.com/api/v2/spot/market/tickers',{cache:'no-store'}),
-    9000)
+  return withTimeout(fetch('https://api.bitget.com/api/v2/spot/market/tickers',{cache:'no-store'}),9000)
     .then(function(r){return r.json();}).then(function(d){
       var o={};
       (d.data||[]).forEach(function(t){
@@ -1031,76 +1000,129 @@ function fetchBitgetRest(){
 }
 
 function fetchWexRest(){
-  // WEX (wex.app) — REST API public pentru tickers
   return withTimeout(
-    fetch('https://wex.app/api/3/ticker/'+ COINS.slice(0,50).map(function(c){return c.toLowerCase()+'_usdt';}).join('-'),{cache:'no-store'}),
+    fetch('https://wex.app/api/3/ticker/'+COINS.slice(0,30).map(function(c){return c.toLowerCase()+'_usdt';}).join('-'),{cache:'no-store'}),
     9000)
     .then(function(r){return r.json();})
     .then(function(d){
-      var o={};
       Object.keys(d||{}).forEach(function(pair){
         var t=d[pair];if(!t)return;
-        var parts=pair.split('_');if(parts.length<2)return;
-        var coin=parts[0].toUpperCase(),quote=parts[1].toUpperCase();
+        var p=pair.split('_');if(p.length<2)return;
+        var coin=p[0].toUpperCase(),quote=p[1].toUpperCase();
         if(!COINS.includes(coin)||!ACTIVE_QUOTES[quote])return;
-        var bid=+t.buy,ask=+t.sell; // WEX: buy=best bid, sell=best ask
+        var bid=+t.buy,ask=+t.sell;
         if(bid>0&&ask>0)WS_PRICES[coin+'_'+quote+'_wex']={bid:bid,ask:ask,bidQty:0,askQty:0,bidLiq:0,askLiq:0,coin:coin,quote:quote,ex:'wex',ts:Date.now()};
       });
       updateExDot('wex','live');
-      return o;
-    }).catch(function(e){updateExDot('wex','error');return {};});
+    }).catch(function(){updateExDot('wex','error');});
 }
 
+function fetchKucoinRest(){
+  return withTimeout(fetch('https://api.kucoin.com/api/v1/market/allTickers',{cache:'no-store'}),10000)
+    .then(function(r){return r.json();}).then(function(d){
+      var o={};
+      ((d.data&&d.data.ticker)||[]).forEach(function(t){
+        var sym=t.symbol||'',coin=null,quote=null;
+        if(sym.endsWith('-USDT')){coin=sym.slice(0,-5);quote='USDT';}
+        else if(sym.endsWith('-USDC')){coin=sym.slice(0,-5);quote='USDC';}
+        if(coin&&COINS.indexOf(coin)>=0&&ACTIVE_QUOTES[quote]&&+t.bestBid>0)
+          o[coin+'_'+quote+'_kucoin']={bid:+t.bestBid,ask:+t.bestAsk,coin:coin,quote:quote,ex:'kucoin',ts:Date.now()};
+      });return o;
+    });
+}
+function fetchHtxRest(){
+  return withTimeout(fetch('https://api.huobi.pro/market/tickers',{cache:'no-store'}),9000)
+    .then(function(r){return r.json();}).then(function(d){
+      var o={};
+      (d.data||[]).forEach(function(t){
+        var sym=t.symbol||'',coin=null,quote=null;
+        if(sym.endsWith('usdt')){coin=sym.slice(0,-4).toUpperCase();quote='USDT';}
+        if(coin&&COINS.indexOf(coin)>=0&&t.bid>0)
+          o[coin+'_'+quote+'_htx']={bid:+t.bid,ask:+t.ask,coin:coin,quote:quote,ex:'htx',ts:Date.now()};
+      });return o;
+    });
+}
+function fetchBingxRest(){
+  return withTimeout(fetch('https://open-api.bingx.com/openApi/spot/v2/market/tickers',{cache:'no-store'}),9000)
+    .then(function(r){return r.json();}).then(function(d){
+      var o={};
+      (d.data||[]).forEach(function(t){
+        var s=t.symbol||'';
+        if(!s.endsWith('-USDT'))return;
+        var coin=s.slice(0,-5);
+        if(COINS.indexOf(coin)<0)return;
+        var bid=+(t.bidPrice||0),ask=+(t.askPrice||0);
+        if(bid>0&&ask>0)o[coin+'_USDT_bingx']={bid:bid,ask:ask,coin:coin,quote:'USDT',ex:'bingx',ts:Date.now()};
+      });return o;
+    });
+}
 
-// ════════════════════════════════════
-// PRICE ENGINE — WS cache + REST poll
-// ════════════════════════════════════
-var restTick=0;
+// ═══════════════════════════════════════════
+// MERGE PRICES (WS + REST)
+// ═══════════════════════════════════════════
 function fetchAllPrices(){
-  var prices={},now=Date.now();
-  Object.keys(WS_PRICES).forEach(function(k){var wp=WS_PRICES[k];if(now-wp.ts<10000)prices[k]=wp;});
+  var prices={}, now=Date.now();
+  // Inject fresh WS prices
+  Object.keys(WS_PRICES).forEach(function(k){
+    var wp=WS_PRICES[k];
+    if(now-wp.ts<6000)prices[k]=wp;
+  });
 
   function runBatch(ek,fn){
     if(CB.isOpen(ek))return Promise.resolve();
     var t0=performance.now();
     return fn().then(function(res){
       S.latency[ek]=Math.round(performance.now()-t0);CB.ok(ek);
-      Object.keys(res).forEach(function(k){if(!prices[k]||now-(prices[k].ts||0)>3000)prices[k]=res[k];});
+      Object.keys(res).forEach(function(k){
+        if(prices[k]&&prices[k].ts&&(now-prices[k].ts)<3000)return; // WS is fresher
+        prices[k]=res[k];
+      });
       updateExDot(ek,'live');
-    }).catch(function(){S.latency[ek]=999;CB.fail(ek);updateExDot(ek,'error');});
+    }).catch(function(){
+      S.latency[ek]=Math.round(performance.now()-t0);CB.fail(ek);
+      updateExDot(ek,'error');
+    });
   }
 
-  // Poll REST exchanges every 3 scan ticks (~1.5s) to avoid hammering
-  restTick++;
-  var restBatches=[];
-  if(restTick%3===0)restBatches.push(runBatch('bitget',fetchBitgetRest));
-  if(restTick%5===0)restBatches.push(runBatch('wex',fetchWexRest));
-
-  return Promise.all(restBatches).then(function(){S.prices=prices;return prices;});
+  return Promise.all([
+    runBatch('binance', fetchBinanceRest),
+    runBatch('bybit',   fetchBybitRest),
+    runBatch('gate',    fetchGateRest),
+    runBatch('mexc',    fetchMexcRest),
+    runBatch('bitget',  fetchBitgetRest),
+    runBatch('kucoin',  fetchKucoinRest),
+    runBatch('htx',     fetchHtxRest),
+    runBatch('bingx',   fetchBingxRest),
+  ]).then(function(){
+    S.prices=prices;return prices;
+  });
 }
 
-// ════════════════════════════════════
+// ═══════════════════════════════════════════
 // ARB CALCULATOR
-// ════════════════════════════════════
+// ═══════════════════════════════════════════
 function calcArb(coin,quote,prices){
   var bids={},asks={},liqBid={},liqAsk={};
-  // MIN liquidity = 3x trade size to ensure we can fill
-  var MIN_LIQ = TRADE_SIZE * 3;
+  var KNOWN_NETWORKS={
+    'RAY':{binance:'SOL',bybit:'SOL',okx:'SOL'},'JTO':{binance:'SOL',bybit:'SOL',okx:'SOL'},
+    'JUP':{binance:'SOL',bybit:'SOL',okx:'SOL'},'BONK':{binance:'SOL',bybit:'SOL',okx:'SOL'},
+    'WIF':{binance:'SOL',bybit:'SOL',okx:'SOL'},'BOME':{binance:'SOL',bybit:'SOL',okx:'SOL'},
+    'PYTH':{binance:'SOL',bybit:'SOL',okx:'SOL'},'POPCAT':{binance:'SOL',bybit:'SOL',okx:'SOL'},
+    'SLERF':{binance:'SOL',bybit:'SOL'},'PNUT':{binance:'SOL',bybit:'SOL',okx:'SOL'},
+    'PENGU':{binance:'SOL',bybit:'SOL',okx:'SOL'},
+  };
   EXK.forEach(function(ek){
     if(ARB_EXCLUDED[ek])return;
     var p=prices[coin+'_'+quote+'_'+ek];
     if(!p||p.bid<=0||p.ask<=0)return;
-    // Enforce per-exchange minimum liquidity thresholds
-    var hasLiq = p.askLiq!=null && p.bidLiq!=null;
-    var minBuy = MIN_LIQ_BUY[ek] || TRADE_SIZE;
-    var minSell = MIN_LIQ_SELL[ek] || TRADE_SIZE;
+    var hasLiq=p.askLiq!=null&&p.bidLiq!=null;
+    var minBuy=MIN_LIQ_BUY[ek]||TRADE_SIZE;
+    var minSell=MIN_LIQ_SELL[ek]||TRADE_SIZE;
     if(hasLiq){
-      if(p.askLiq < Math.max(TRADE_SIZE, minBuy))return; // not enough to buy
-      if(p.bidLiq < Math.max(TRADE_SIZE, minSell))return; // not enough to sell
+      if(p.askLiq<Math.max(TRADE_SIZE,minBuy))return;
+      if(p.bidLiq<Math.max(TRADE_SIZE,minSell))return;
     } else {
-      // No liquidity data at all (REST polling, no depth) → use price age as proxy
-      // If price is stale > 30s, skip this exchange for arb
-      if(Date.now()-p.ts > 30000)return;
+      if(Date.now()-p.ts>30000)return;
     }
     bids[ek]=p.bid; asks[ek]=p.ask;
     liqBid[ek]=hasLiq?p.bidLiq:999999;
@@ -1113,56 +1135,54 @@ function calcArb(coin,quote,prices){
   if(bk===sk){if(bkArr.length>1)bk=bkArr[1];else if(skArr.length>1)sk=skArr[1];else return null;}
   if(bk===sk)return null;
   var buyAsk=asks[bk],sellBid=bids[sk];
-  if(!_safe(buyAsk)||!_safe(sellBid)||buyAsk<=0||sellBid<=0)return null;
-  // Effective price impact: if we're buying a large % of available liquidity, price moves
-  var availBuy=liqAsk[bk]||999999;
-  var availSell=liqBid[sk]||999999;
-  // Price impact estimate: (TRADE_SIZE / available_liq) * 0.5 (rough market impact)
-  var impactBuy = availBuy < 999999 ? (TRADE_SIZE/availBuy)*0.5 : 0;
-  var impactSell = availSell < 999999 ? (TRADE_SIZE/availSell)*0.5 : 0;
+  if(!buyAsk||!sellBid||buyAsk<=0||sellBid<=0)return null;
+  var availBuy=liqAsk[bk]||999999,availSell=liqBid[sk]||999999;
+  var impactBuy=availBuy<999999?(TRADE_SIZE/availBuy)*0.5:0;
+  var impactSell=availSell<999999?(TRADE_SIZE/availSell)*0.5:0;
   var gross=(sellBid-buyAsk)/buyAsk*100,fees=(TAKER[bk]+TAKER[sk])*100;
   var net=gross-fees-0.01-impactBuy-impactSell;
+  // Network warning
+  var netN=KNOWN_NETWORKS[coin];
+  var netWarn=null;
+  if(netN&&netN[bk]&&netN[sk]&&netN[bk]!==netN[sk]){
+    netWarn={msg:'REȚELE DIFERITE: '+bk.toUpperCase()+' ('+netN[bk]+') ↔ '+sk.toUpperCase()+' ('+netN[sk]+')'};
+    if((gross*TRADE_SIZE/100)-15<=0)return null;
+  }
   if(net<MIN_SPREAD)return null;
   var qty=TRADE_SIZE/buyAsk,profit=(sellBid-buyAsk)*qty-(fees/100)*TRADE_SIZE;
   var liqScore=Math.min(availBuy,availSell);
   var liqLabel=liqScore>10000?'HIGH':liqScore>2000?'MED':liqScore>500?'LOW':'VERY LOW';
-  var netWarn=getNetworkWarning(coin,bk,sk);
-  // If network mismatch AND spread can't cover bridge/gas cost -> filter out
-  // ETH gas ~$15 min, so at TRADE_SIZE < $500 and spread < 5% = not worth it
-  if(netWarn){
-    var gasEstimate=15; // USD avg ETH gas
-    var profitAfterGas=profit-gasEstimate;
-    if(profitAfterGas<=0)return null; // definitely not worth it
-  }
   return {coin:coin,quote:quote,buyEx:bk,sellEx:sk,buyAsk:buyAsk,sellBid:sellBid,
     gross:gross,fees:fees,net:net,profit:profit,qty:qty,allBids:bids,allAsks:asks,
-    availBuy:availBuy,availSell:availSell,liqLabel:liqLabel,
-    impact:impactBuy+impactSell,networkWarn:netWarn,
-    risk:net>=0.4?'safe':net>=0.2?'med':'risky',ts:Date.now()};
-}
-function findArbs(prices){
-  var r=[];
-  COINS.forEach(function(coin){['USDT','USDC','USD','EUR'].forEach(function(q){
-    if(!ACTIVE_QUOTES[q])return;var res=calcArb(coin,q,prices);if(res)r.push(res);
-  });});
-  return r.sort(function(a,b){return b.net-a.net;});
+    availBuy:availBuy,availSell:availSell,liqLabel:liqLabel,impact:impactBuy+impactSell,
+    networkWarn:netWarn,risk:net>=0.4?'safe':net>=0.2?'med':'risky',ts:Date.now()};
 }
 
-// ════════════════════════════════════
-// RENDER
-// ════════════════════════════════════
-var prevHash='';
+function findArbs(prices){
+  var results=[];
+  COINS.forEach(function(coin){
+    ['USDT','USDC','USD','EUR'].forEach(function(q){
+      if(!ACTIVE_QUOTES[q])return;
+      var r=calcArb(coin,q,prices);
+      if(r)results.push(r);
+    });
+  });
+  results.sort(function(a,b){return b.net-a.net;});
+  return results;
+}
+
+// ═══════════════════════════════════════════
+// RENDER OPPORTUNITIES
+// ═══════════════════════════════════════════
+var prevKeys = {};
 function renderOpps(results){
-  var oc=g('opp-count'),list=g('opp-list'),empty=g('opp-empty');
-  if(!list)return;
-  // FREEZE MODE: dacă nu sunt rezultate noi, păstrează ultimele vizibile
+  var list=g('opp-list'),empty=g('opp-empty'),oc=g('opp-count');
   if(!results.length){
-    // Nu șterge nimic - lasă ce e pe ecran
-    // Doar actualizează badge-ul să arate că sunt stale
-    var staleBar=g('stale-bar');
+    // FREEZE MODE — păstrează ultimele oportunități vizibile
+    var staleBar=document.getElementById('stale-bar');
     if(!staleBar){
       staleBar=document.createElement('div');staleBar.id='stale-bar';
-      staleBar.style.cssText='font-size:9px;color:var(--yellow);text-align:center;padding:4px;opacity:.7;border-bottom:1px solid var(--border)';
+      staleBar.style.cssText='font-size:9px;color:var(--yellow);text-align:center;padding:4px;opacity:.8;border-bottom:1px solid var(--border)';
       if(list.parentNode)list.parentNode.insertBefore(staleBar,list);
     }
     S._staleCount=(S._staleCount||0)+1;
@@ -1172,245 +1192,462 @@ function renderOpps(results){
     if(oc)oc.textContent='0 live ('+sec+'s vechi)';
     return;
   }
-  // Avem rezultate noi — resetează stale
-  S._staleCount=0;
-  var staleBar=g('stale-bar');if(staleBar)staleBar.style.display='none';
-  var hash=results.slice(0,8).map(function(r){return r.coin+r.buyEx+r.sellEx+r.net.toFixed(2);}).join('|');
-  if(hash===prevHash)return;prevHash=hash;
-  // Hide/detach empty before clearing
-  if(empty&&empty.parentNode===list)list.removeChild(empty);
+  empty.style.display='none';
   if(oc)oc.textContent=results.length+' găsite';
-  while(list.firstChild)list.removeChild(list.firstChild);
-  results.slice(0,15).forEach(function(r,i){
-    var div=document.createElement('div');div.className='opp '+r.risk+(i<3?' NEW':'');div.onclick=function(){selectArb(r);};
-    if(!EX[r.buyEx]||!EX[r.sellEx])return;
-    var buyC=EX[r.buyEx].c,sellC=EX[r.sellEx].c,spreadC=r.risk==='safe'?'var(--green)':r.risk==='med'?'var(--yellow)':'var(--red)';
-    div.innerHTML='<div class="opp-top"><div style="display:flex;align-items:center;gap:6px"><span class="opp-coin">'+r.coin+'</span><span style="font-size:7px;padding:1px 5px;border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--text3)">'+r.quote+'</span>'
-      +(r.risk==='safe'?'<span style="color:var(--green);font-size:8px">✓ SAFE</span>':r.risk==='med'?'<span style="color:var(--yellow);font-size:8px">~ MED</span>':'<span style="color:var(--red);font-size:8px">!</span>')
-      +(r.networkWarn?'<span style="color:var(--red);font-size:7px;background:rgba(255,50,50,.15);padding:1px 5px;border-radius:4px;border:1px solid var(--red)">⚠ REȚELE DIFERITE</span>':'')
-      +'</div><span style="font-family:Rajdhani,sans-serif;font-size:20px;font-weight:700;color:'+spreadC+'">+'+r.net.toFixed(3)+'%</span></div>'
-      +'<div class="opp-route"><div class="opp-ex buy"><div class="ex-action" style="color:var(--green)">CUMPĂRĂ</div><div class="ex-name" style="color:'+buyC+'">'+EX[r.buyEx].n+'</div><div class="ex-price">@'+r.buyAsk.toPrecision(6)+'</div></div>'
-      +'<div style="color:var(--text3);font-size:14px">→</div>'
-      +'<div class="opp-ex sell"><div class="ex-action" style="color:var(--red)">VINDE</div><div class="ex-name" style="color:'+sellC+'">'+EX[r.sellEx].n+'</div><div class="ex-price">@'+r.sellBid.toPrecision(6)+'</div></div></div>'
-      +'<div class="opp-meta"><span>Brut: '+r.gross.toFixed(3)+'% | Taxe: <span style="color:var(--red)">'+r.fees.toFixed(3)+'%</span>'
-      +(r.liqLabel?(' | Liq: <span style="color:'+(r.liqLabel==='HIGH'?'var(--green)':r.liqLabel==='MED'?'var(--yellow)':'var(--red)')+'">'+r.liqLabel+'</span>'):'')
-      +'</span><span class="opp-profit '+(r.profit>0?'pos':'neg')+'">'+(r.profit>0?'+':'')+'$'+r.profit.toFixed(3)+'</span></div>';
+
+  // Check if best spread changed significantly
+  var newKeys = results.slice(0,10).map(function(r){return r.coin+r.buyEx+r.sellEx+r.net.toFixed(2);}).join('|');
+  if(newKeys===prevKeys._last){return;} // nothing changed
+  prevKeys._last=newKeys;
+
+  list.innerHTML='';
+  results.slice(0,12).forEach(function(r,i){
+    var div=document.createElement('div');
+    div.className='opp '+r.risk+(i<3?' NEW':'');
+    div.onclick=function(){selectArb(r);};
+    var buyColor=EX[r.buyEx]?EX[r.buyEx].c:'#fff';
+    var sellColor=EX[r.sellEx]?EX[r.sellEx].c:'#fff';
+    var spreadColor=r.risk==='safe'?'var(--green)':r.risk==='med'?'var(--yellow)':'var(--red)';
+    div.innerHTML=
+      '<div class="opp-top">'
+        +'<div style="display:flex;align-items:center;gap:6px">'
+          +'<span class="opp-coin">'+r.coin+'</span>'
+          +'<span style="font-size:7px;padding:1px 5px;border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--text3)">'+r.quote+'</span>'
+          +(r.risk==='safe'?'<span style="color:var(--green);font-size:8px">SAFE</span>':r.risk==='med'?'<span style="color:var(--yellow);font-size:8px">MED</span>':'<span style="color:var(--red);font-size:8px">RISKY</span>')
+          +(r.liqLabel?'<span style="font-size:7px;color:'+(r.liqLabel==='HIGH'?'#00ff88':r.liqLabel==='MED'?'#f5c842':'#ff8844')+';border:1px solid currentColor;border-radius:3px;padding:0 3px">'+r.liqLabel+'</span>':'')
+          +(r.networkWarn?'<span style="font-size:7px;color:#ff4466;border:1px solid #ff4466;border-radius:3px;padding:0 3px">NET!</span>':'')
+        +'</div>'
+        +'<span class="opp-spread" style="color:'+spreadColor+'">+'+r.net.toFixed(3)+'%</span>'
+      +'</div>'
+      +'<div class="opp-route">'
+        +'<div class="opp-ex buy">'
+          +'<div class="ex-action" style="color:var(--green)">CUMPĂRĂ</div>'
+          +'<div class="ex-name buy" style="color:'+buyColor+'">'+EX[r.buyEx].n+'</div>'
+          +'<div class="ex-price">@'+r.buyAsk.toPrecision(6)+'</div>'
+        +'</div>'
+        +'<div class="opp-arrow">→</div>'
+        +'<div class="opp-ex sell">'
+          +'<div class="ex-action" style="color:var(--red)">VINDE</div>'
+          +'<div class="ex-name sell" style="color:'+sellColor+'">'+EX[r.sellEx].n+'</div>'
+          +'<div class="ex-price">@'+r.sellBid.toPrecision(6)+'</div>'
+        +'</div>'
+      +'</div>'
+      +'<div class="opp-meta">'
+        +'<span>Brut: '+r.gross.toFixed(3)+'% | Taxe: <span style="color:var(--red)">'+r.fees.toFixed(3)+'%</span></span>'
+        +'<span class="opp-profit '+(r.profit>0?'pos':'neg')+'">'+(r.profit>0?'+':'')+'$'+r.profit.toFixed(3)+'</span>'
+      +'</div>';
     list.appendChild(div);
   });
 }
 
-function buildUrl(ek,coin,quote){
-  var t=EX[ek]?EX[ek].url:'';
-  return t.replace(/{COIN}/g,coin).replace(/{QUOTE}/g,quote).replace(/{coin}/g,coin.toLowerCase()).replace(/{quote}/g,quote.toLowerCase());
+// ═══════════════════════════════════════════
+// BUILD TRADING URL
+// ═══════════════════════════════════════════
+function buildUrl(ek, coin, quote){
+  var tmpl=EX[ek]?EX[ek].url:'';
+  return tmpl.replace(/{COIN}/g,coin).replace(/{QUOTE}/g,quote)
+    .replace(/{coin}/g,coin.toLowerCase()).replace(/{quote}/g,quote.toLowerCase());
 }
 
+// ═══════════════════════════════════════════
+// SELECT & SHOW INSTRUCTIONS
+// ═══════════════════════════════════════════
 function selectArb(r){
-  S.selectedArb=r;g('instr-placeholder').style.display='none';g('selected-opp').className='instr-card show';
-  var bN=EX[r.buyEx].n,sN=EX[r.sellEx].n,bC=EX[r.buyEx].c,sC=EX[r.sellEx].c,qty=r.qty.toPrecision(5);
-  g('sel-title').textContent='▲ '+r.coin+'/'+r.quote+' — +'+r.net.toFixed(3)+'% NET';
+  S.selectedArb=r;
+  g('instr-placeholder').style.display='none';
+  var panel=g('selected-opp');
+  panel.className='instr-card show';
+
+  var buyName=EX[r.buyEx].n, sellName=EX[r.sellEx].n;
+  var buyColor=EX[r.buyEx].c, sellColor=EX[r.sellEx].c;
+  var buyUrl=buildUrl(r.buyEx,r.coin,r.quote);
+  var sellUrl=buildUrl(r.sellEx,r.coin,r.quote);
+
+  g('sel-title').innerHTML='▲ '+r.coin+'/'+r.quote+' — +'+r.net.toFixed(3)+'% NET';
+
   // Network warning block
   var nwEl=g('network-warn-block');
-  if(!nwEl){nwEl=document.createElement('div');nwEl.id='network-warn-block';var icard=g('selected-opp');if(icard)icard.insertBefore(nwEl,icard.firstChild);}
+  if(!nwEl){nwEl=document.createElement('div');nwEl.id='network-warn-block';
+    var panel2=g('selected-opp');if(panel2)panel2.insertBefore(nwEl,panel2.querySelector('.steps')||panel2.firstChild);}
   if(r.networkWarn){
-    nwEl.style.cssText='background:rgba(255,30,30,.12);border:1px solid #ff4444;border-radius:6px;padding:10px 14px;margin-bottom:10px;font-size:11px;display:block';
-    nwEl.innerHTML='<div style="color:#ff4444;font-weight:700;font-size:12px;margin-bottom:5px">⚠ REȚELE INCOMPATIBILE — VERIFICĂ ÎNAINTE!</div>'
-      +'<div style="color:var(--text2);line-height:1.5">'
-      +r.networkWarn.msg+'<br>'
-      +'<span style="color:var(--yellow)">→ Transferul direct poate fi imposibil sau prea scump pe ETH!</span>'
-      +'</div>';
-  } else { nwEl.style.display='none'; nwEl.innerHTML=''; }
-  g('step1-detail').innerHTML='Deschide <b style="color:'+bC+'">'+bN+'</b> · pereche <b>'+r.coin+'/'+r.quote+'</b>';
-  var sl1=g('step1-link');sl1.href=buildUrl(r.buyEx,r.coin,r.quote);sl1.textContent='→ Deschide '+bN;sl1.style.color=bC;sl1.style.borderColor=bC+'44';
-  g('step2-detail').innerHTML='Plasează <b style="color:var(--green)">MARKET BUY</b> pe <b style="color:'+bC+'">'+bN+'</b>';
-  var buyLiqStr=r.availBuy&&r.availBuy<999999?'<br>📊 Lichiditate buy: <b style="color:'+(r.availBuy>r.availBuy*3?'var(--green)':r.availBuy>TRADE_SIZE*2?'var(--yellow)':'var(--red)')+'">$'+Math.round(r.availBuy)+'</b> disponibil (top 3 niveluri)':'';
-  g('step2-val').innerHTML='Cheltuiește: <span style="color:var(--yellow)">$'+TRADE_SIZE.toFixed(2)+' '+r.quote+'</span><br>Primești ≈ <span style="color:var(--green)">'+qty+' '+r.coin+'</span><br>Preț ASK acum: '+r.buyAsk.toPrecision(7)+buyLiqStr;
-  g('step3-detail').innerHTML='Deschide <b style="color:'+sC+'">'+sN+'</b> · pereche <b>'+r.coin+'/'+r.quote+'</b>'
-    +(r.networkWarn?'<br><span style="color:var(--red);font-size:10px">⚠ Verifică că '+sN+' acceptă '+r.networkWarn.buyNetwork+' pentru depozit!</span>':'');
-  var sl3=g('step3-link');sl3.href=buildUrl(r.sellEx,r.coin,r.quote);sl3.textContent='→ Deschide '+sN;sl3.style.color=sC;sl3.style.borderColor=sC+'44';
-  var estimSell=r.qty*r.sellBid*(1-(TAKER[r.sellEx]||0.001));
-  g('step4-detail').innerHTML='Plasează <b style="color:var(--red)">MARKET SELL</b> pe <b style="color:'+sC+'">'+sN+'</b>';
-  var sellLiqStr=r.availSell&&r.availSell<999999?'<br>📊 Lichiditate sell: <b style="color:'+(r.availSell>TRADE_SIZE*3?'var(--green)':r.availSell>TRADE_SIZE?'var(--yellow)':'var(--red)')+'">$'+Math.round(r.availSell)+'</b> disponibil (top 3 niveluri)':'';
-  var impactStr=r.impact>0?'<br>⚡ Impact estimat: <span style="color:var(--yellow)">-'+r.impact.toFixed(3)+'%</span>':'';
-  g('step4-val').innerHTML='Vinde: <span style="color:var(--yellow)">'+qty+' '+r.coin+'</span><br>Primești ≈ <span style="color:var(--green)">$'+estimSell.toFixed(2)+' '+r.quote+'</span><br><b style="color:var(--green)">Profit net ≈ '+(r.profit>0?'+$'+r.profit.toFixed(3):'—')+'</b>'+sellLiqStr+impactStr;
+    nwEl.style.cssText='background:rgba(255,30,30,.1);border:1px solid #ff4466;border-radius:6px;padding:10px 14px;margin-bottom:10px;font-size:11px;display:block';
+    nwEl.innerHTML='<b style="color:#ff4466">⚠ REȚELE INCOMPATIBILE</b><br><span style="color:#aaa">'+r.networkWarn.msg+'</span>';
+  } else {nwEl.style.display='none';}
+
+  // Step 1
+  g('step1-detail').innerHTML='Deschide <b style="color:'+buyColor+'">'+buyName+'</b> la perechea <b>'+r.coin+'/'+r.quote+'</b>';
+  var sl1=g('step1-link');sl1.href=buyUrl;sl1.textContent='→ Deschide '+buyName;sl1.style.color=buyColor;sl1.style.borderColor=buyColor+'44';
+
+  // Step 2
+  var qty=r.qty.toPrecision(5);
+  g('step2-detail').innerHTML='Plasează un ordin <b style="color:var(--green)">MARKET BUY</b> pe <b style="color:'+buyColor+'">'+buyName+'</b>';
+  var liqBuyStr=r.availBuy&&r.availBuy<999999?'<br>📊 Lichiditate buy: <b style="color:'+(r.availBuy>TRADE_SIZE*3?'#00ff88':r.availBuy>TRADE_SIZE?'#f5c842':'#ff4466')+'">$'+Math.round(r.availBuy)+'</b>':'';
+  g('step2-val').innerHTML=
+    'Cheltuiește: <span style="color:var(--yellow)">$'+TRADE_SIZE.toFixed(2)+' '+r.quote+'</span><br>'
+    +'Primești aprox: <span style="color:var(--green)">'+qty+' '+r.coin+'</span><br>'
+    +'Preț curent ASK: <span style="color:var(--text)">'+r.buyAsk.toPrecision(7)+'</span>'
+    +liqBuyStr;
+
+  // Step 3
+  g('step3-detail').innerHTML='Deschide <b style="color:'+sellColor+'">'+sellName+'</b> la perechea <b>'+r.coin+'/'+r.quote+'</b>';
+  var sl3=g('step3-link');sl3.href=sellUrl;sl3.textContent='→ Deschide '+sellName;sl3.style.color=sellColor;sl3.style.borderColor=sellColor+'44';
+
+  // Step 4
+  var estimSell=(r.qty*r.sellBid*(1-TAKER[r.sellEx]));
+  g('step4-detail').innerHTML='Plasează un ordin <b style="color:var(--red)">MARKET SELL</b> pe <b style="color:'+sellColor+'">'+sellName+'</b>';
+  g('step4-val').innerHTML=
+    'Vinde: <span style="color:var(--yellow)">'+qty+' '+r.coin+'</span><br>'
+    +'Primești aprox: <span style="color:var(--green)">$'+estimSell.toFixed(2)+' '+r.quote+'</span><br>'
+    +'Preț curent BID: <span style="color:var(--text)">'+r.sellBid.toPrecision(7)+'</span><br>'
+    +'<span style="color:var(--green);font-weight:700">Profit estimat: +'+(r.profit>0?'$'+r.profit.toFixed(3):'—')+'</span>';
+
+  // Alert box
+  var alertEl=g('instr-alert');
   var age=Math.round((Date.now()-r.ts)/1000);
-  var ae=g('instr-alert');
-  if(r.risk==='risky'){ae.className='alert-box danger';ae.innerHTML='⚠ Spread mic! Date de '+age+'s. Acționează IMEDIAT sau skip.';}
-  else if(r.risk==='med'){ae.className='alert-box warn';ae.innerHTML='⏱ Date de '+age+'s. Verifică prețul înainte de plasare.';}
-  else{ae.className='alert-box info';ae.innerHTML='✓ Oportunitate solidă! Date de '+age+'s. Confirmă prețul pe exchange.';}
+  if(r.risk==='risky'){
+    alertEl.className='alert-box danger';
+    alertEl.innerHTML='⚠ Spread mic! Asigură-te că ai fonduri pe AMBELE exchange-uri ÎNAINTE de execuție. Prețul se poate schimba în câteva secunde.';
+  } else if(r.risk==='med'){
+    alertEl.className='alert-box warn';
+    alertEl.innerHTML='⏱ Execuție rapidă necesară! Date de acum <b>'+age+'s</b>. Verifică prețul din nou pe exchange înainte de a plasa ordinul.';
+  } else {
+    alertEl.className='alert-box info';
+    alertEl.innerHTML='✓ Oportunitate bună! Date de acum <b>'+age+'s</b>. Totuși verifică prețul live pe exchange înainte de execuție.';
+  }
+
+  // Comparison table
   var tbody=g('cmp-tbody');tbody.innerHTML='';
-  var uniq=[];Object.keys(r.allBids).concat(Object.keys(r.allAsks)).forEach(function(x){if(uniq.indexOf(x)<0)uniq.push(x);});
-  uniq.sort(function(a,b){return(r.allBids[b]||0)-(r.allBids[a]||0);});
+  var allEx=Object.keys(r.allBids).concat(Object.keys(r.allAsks));
+  var uniq=[]; allEx.forEach(function(x){if(uniq.indexOf(x)<0)uniq.push(x);});
+  uniq.sort(function(a,b){return (r.allBids[b]||0)-(r.allBids[a]||0);});
   uniq.forEach(function(ek){
-    var bid=r.allBids[ek]||0,ask=r.allAsks[ek]||0,tr=document.createElement('tr');
-    if(ek===r.sellEx||ek===r.buyEx)tr.className='best';
-    tr.innerHTML='<td style="color:'+(EX[ek]?EX[ek].c:'#aaa')+'">'+(EX[ek]?EX[ek].n:ek)+(ek===r.buyEx?' 🟢':ek===r.sellEx?' 🔴':'')+'</td>'
+    var bid=r.allBids[ek]||0,ask=r.allAsks[ek]||0;
+    var isBest=(ek===r.sellEx||ek===r.buyEx);
+    var tr=document.createElement('tr');
+    if(isBest)tr.className='best';
+    tr.innerHTML='<td style="color:'+EX[ek].c+'">'+(EX[ek]?EX[ek].n:ek)+(ek===r.buyEx?' ??BUY':ek===r.sellEx?' ??SELL':'')+'</td>'
       +'<td style="color:var(--green)">'+(bid>0?bid.toPrecision(6):'—')+'</td>'
       +'<td style="color:var(--red)">'+(ask>0?ask.toPrecision(6):'—')+'</td>';
     tbody.appendChild(tr);
   });
+
+  // Sound
   if(SOUND_ON)playAlert(r.net>0.5?1047:880);
 }
 
-// ════════════════════════════════════
-// EX STATUS
-// ════════════════════════════════════
+// ═══════════════════════════════════════════
+// EXCHANGE DOT STATUS
+// ═══════════════════════════════════════════
 function initExStatus(){
   var w=g('ex-status');if(!w)return;w.innerHTML='';
   EXK.forEach(function(ek){
-    var d=document.createElement('div');d.id='exdot-'+ek;d.className='ex-dot';
-    var excl=ARB_EXCLUDED[ek];
-    d.style.color=excl?'var(--text3)':EX[ek].c;
-    d.style.borderColor=excl?'rgba(255,255,255,.1)':EX[ek].c+'33';
-    d.style.opacity=excl?'0.45':'1';
-    d.title=excl?EX[ek].n+' — exclus din ARB (price feed only)':'';
-    d.innerHTML=EX[ek].n+'<span class="ex-mode">'+(excl?'EXCL':(EX[ek].ws?'WS':'REST'))+'</span>';
+    var d=document.createElement('div');
+    d.id='exdot-'+ek;d.className='ex-dot';
+    d.style.color=EX[ek].c;d.style.borderColor=EX[ek].c+'33';
+    d.textContent=EX[ek].n;
     w.appendChild(d);
   });
 }
 function updateExDot(ek,state){
   var d=g('exdot-'+ek);if(!d)return;
-  d.className='ex-dot'+(state==='live'?' live':' error');
-  d.style.color=state==='live'?EX[ek].c:'#553344';
+  d.className='ex-dot '+(state==='live'?'live':'error');
+  if(state!=='live')d.style.color='#553344';
+  else d.style.color=EX[ek].c;
 }
 function updateExCount(){
-  var alive=EXK.filter(function(ek){var d=g('exdot-'+ek);return d&&d.classList.contains('live');}).length;
+  var alive=EXK.filter(function(ek){
+    var d=g('exdot-'+ek);return d&&d.classList.contains('live');
+  }).length;
   var el=g('s-ex');if(el)el.textContent=alive+' / '+EXK.length;
 }
 
-// ════════════════════════════════════
+// ═══════════════════════════════════════════
 // SCAN LOOP
+// ═══════════════════════════════════════════
 // ════════════════════════════════════
+// TICKER BAR
+// ════════════════════════════════════
+function updateTicker(results){
+  var wrap=document.getElementById('ticker-wrap');
+  var track=document.getElementById('ticker-track');
+  if(!wrap||!track)return;
+  if(!results||!results.length)return; // freeze — păstrează ce era
+  wrap.classList.add('active');
+  var sorted=results.slice().sort(function(a,b){
+    var rO={safe:0,med:1,risky:2};
+    if(rO[a.risk]!==rO[b.risk])return rO[a.risk]-rO[b.risk];
+    return b.net-a.net;
+  });
+  track.innerHTML='';
+  var frag=document.createDocumentFragment();
+  var allItems=[];
+  sorted.forEach(function(r){
+    var buyN=EX[r.buyEx]?EX[r.buyEx].n:r.buyEx;
+    var sellN=EX[r.sellEx]?EX[r.sellEx].n:r.sellEx;
+    var spreadC=r.risk==='safe'?'#00ff88':r.risk==='med'?'#f5c842':'#ff4466';
+    var liqC=r.liqLabel==='HIGH'?'#00ff88':r.liqLabel==='MED'?'#f5c842':r.liqLabel?'#ff8844':'#aaa';
+    var html2='<span style="font-weight:700;color:#eee">'+r.coin+'</span>'
+      +'<span style="font-size:7px;color:#555">'+r.quote+'</span>'
+      +'<span style="font-size:9px;color:#777">'+buyN+'&rarr;'+sellN+'</span>'
+      +'<span style="font-weight:700;color:'+spreadC+'">+'+r.net.toFixed(3)+'%</span>'
+      +(r.profit>0?'<span style="color:#aaa;font-size:9px">+$'+r.profit.toFixed(2)+'</span>':'')
+      +(r.liqLabel?'<span style="font-size:7px;color:'+liqC+'">'+r.liqLabel+'</span>':'')
+      +(r.networkWarn?'<span style="font-size:7px;color:#ff4466">NET!</span>':'');
+    allItems.push({html:html2,coin:r.coin});
+  });
+  // Duplicate for seamless scroll
+  allItems.concat(allItems).forEach(function(item){
+    var d=document.createElement('div');
+    d.className='t-item';
+    d.style.cssText='cursor:pointer;padding:0 12px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;border-right:1px solid #222';
+    d.innerHTML=item.html;
+    d.onclick=(function(coin){return function(){selectOpp(coin);};})(item.coin);
+    track.appendChild(d);
+  });
+  var baseSpeed=Math.max(8,40-sorted.length*2);
+  track.style.animation='none';
+  track.offsetHeight;
+  track.style.animation='ticker-scroll '+baseSpeed+'s linear infinite';
+}
+function selectOpp(coin){
+  if(!S.results)return;
+  var r=S.results.find(function(x){return x.coin===coin;});
+  if(r)selectArb(r);
+}
+
+
 function scanLoop(){
   if(!S.running)return;
-  setStatus('scan');var t0=performance.now();
+  setStatus('scan');
+  var t0=performance.now();
+
   fetchAllPrices().then(function(prices){
     if(!S.running)return;
-    S.scanCount++;var results=findArbs(prices);S.results=results;
+    S._lastScan=Date.now();
+    S.scanCount++;
+
+    var results=findArbs(prices);
+    S.results=results;
+
     renderOpps(results);
     updateTicker(results);
-    if(S.selectedArb){var upd=results.find(function(r){return r.coin===S.selectedArb.coin&&r.quote===S.selectedArb.quote;});if(upd)selectArb(upd);}
+
+    // Update selected if still shown
+    if(S.selectedArb){
+      var updated=results.find(function(r){return r.coin===S.selectedArb.coin&&r.quote===S.selectedArb.quote;});
+      if(updated)selectArb(updated);
+    }
+
+    // Stats
     var ss=g('s-scans');if(ss)ss.textContent=S.scanCount;
     var so=g('s-opps');if(so)so.textContent=results.length;
     var sb=g('s-best');if(sb)sb.textContent=results.length?'+'+results[0].net.toFixed(3)+'%':'—';
     var lu=g('lupd');if(lu)lu.textContent=new Date().toTimeString().slice(0,8);
-    var lats=Object.values(S.latency).filter(function(x){return x>0&&x<900;});
+    var lats=Object.values(S.latency).filter(function(x){return x>0;});
     var sl=g('s-lat');if(sl)sl.textContent=lats.length?Math.round(lats.reduce(function(a,b){return a+b;})/lats.length)+'ms':'—';
-    updateExCount();setStatus(results.length>0?'ok':'idle');
-    if(SOUND_ON&&results.length>0&&results[0].net>0.5)playAlert(880);
-    S.timer=setTimeout(scanLoop,Math.max(50,SCAN_INTERVAL-(Math.round(performance.now()-t0))));
-  }).catch(function(e){xlog('Scan: '+e.message,'fail');S.timer=setTimeout(scanLoop,SCAN_INTERVAL);});
+    updateExCount();
+    setStatus(results.length>0?'ok':'idle');
+
+    if(S.soundEnabled&&results.length>0&&results[0].net>0.5)playAlert(880);
+
+    var elapsed=Math.round(performance.now()-t0);
+    S.timer=setTimeout(scanLoop,Math.max(100,SCAN_INTERVAL-elapsed));
+  }).catch(function(e){
+    xlog('Scan eroare: '+e.message,'fail');
+    S._lastScan=Date.now();
+    S.timer=setTimeout(scanLoop,SCAN_INTERVAL);
+  });
 }
 
-// ════════════════════════════════════
-// SOUND & UI
-// ════════════════════════════════════
+// ═══════════════════════════════════════════
+// SOUND
+// ═══════════════════════════════════════════
 var _ac=null;
-function playAlert(freq){try{if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();var osc=_ac.createOscillator(),gain=_ac.createGain();osc.type='sine';osc.frequency.value=freq||880;gain.gain.setValueAtTime(0.07,_ac.currentTime);gain.gain.exponentialRampToValueAtTime(0.001,_ac.currentTime+0.3);osc.connect(gain);gain.connect(_ac.destination);osc.start();osc.stop(_ac.currentTime+0.3);}catch(e){}}
-function toggleSound(){SOUND_ON=!SOUND_ON;var btn=g('sound-btn');if(btn){btn.textContent=SOUND_ON?'🔊':'🔇';btn.className=SOUND_ON?'on':'';}if(SOUND_ON)playAlert(660);}
+function playAlert(freq){
+  try{
+    if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();
+    var osc=_ac.createOscillator(),gain=_ac.createGain();
+    osc.type='sine';osc.frequency.value=freq||880;
+    gain.gain.setValueAtTime(0.07,_ac.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,_ac.currentTime+0.3);
+    osc.connect(gain);gain.connect(_ac.destination);
+    osc.start();osc.stop(_ac.currentTime+0.3);
+  }catch(e){}
+}
+function toggleSound(){
+  SOUND_ON=!SOUND_ON;
+  var btn=g('sound-btn');
+  if(btn){btn.textContent=SOUND_ON?'??':'??';btn.className=SOUND_ON?'on':'';}
+  if(SOUND_ON)playAlert(660);
+}
 
-function initControls(){
-  document.querySelectorAll('[data-ms]').forEach(function(btn){btn.addEventListener('click',function(){SCAN_INTERVAL=+this.getAttribute('data-ms');document.querySelectorAll('[data-ms]').forEach(function(b){b.classList.remove('active');});this.classList.add('active');var sv=g('s-speed');if(sv)sv.textContent=SCAN_INTERVAL/1000+'s';});});
-  document.querySelectorAll('[data-spr]').forEach(function(btn){btn.addEventListener('click',function(){MIN_SPREAD=+this.getAttribute('data-spr');document.querySelectorAll('[data-spr]').forEach(function(b){b.classList.remove('active');});this.classList.add('active');prevHash='';});});
-  document.querySelectorAll('.qfilt').forEach(function(btn){btn.addEventListener('click',function(){var q=this.getAttribute('data-q');ACTIVE_QUOTES[q]=!ACTIVE_QUOTES[q];this.className='qfilt'+(ACTIVE_QUOTES[q]?' on':'');prevHash='';});});
+// ═══════════════════════════════════════════
+// UI INIT
+// ═══════════════════════════════════════════
+function initSpeedBtns(){
+  document.querySelectorAll('[data-ms]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      SCAN_INTERVAL=+this.getAttribute('data-ms');
+      document.querySelectorAll('[data-ms]').forEach(function(b){b.classList.remove('active');});
+      this.classList.add('active');
+    });
+  });
+  document.querySelectorAll('[data-spr]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      MIN_SPREAD=+this.getAttribute('data-spr');
+      document.querySelectorAll('[data-spr]').forEach(function(b){b.classList.remove('active');});
+      this.classList.add('active');
+      prevKeys._last=''; // force re-render
+    });
+  });
+  document.querySelectorAll('.qfilt').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var q=this.getAttribute('data-q');
+      ACTIVE_QUOTES[q]=!ACTIVE_QUOTES[q];
+      this.className='qfilt'+(ACTIVE_QUOTES[q]?' on':'');
+      prevKeys._last='';
+    });
+  });
+}
+
+function initStartBtn(){
   var btn=g('btn-start');if(!btn)return;
   btn.addEventListener('click',function(){
-    if(S.running){S.running=false;clearTimeout(S.timer);stopAllWS();btn.textContent='▶ START SCAN';btn.className='';setStatus('idle');xlog('Scanner oprit','warn');var tw=g('ticker-wrap');if(tw)tw.classList.remove('active');}
-    else{
-      try{
-        S.running=true;S._staleCount=0;btn.textContent='■ STOP';btn.className='stop';
-        xlog('🔍 Se descoperă monede de pe exchange-uri...','ok');
-          updateProxyBtn();
-          if(CORS_PROXY) xlog('✓ CORS Proxy: '+CORS_PROXY,'ok');
-          else xlog('⚠ Fără CORS Proxy — apasă ⚡ PROXY ca să setezi','warn');
-        discoverCoins(function(){
-          if(!S.running)return;
-          xlog('Scanner pornit ⚡ '+SCAN_INTERVAL+'ms — 14 ex · '+COINS.length+' monede','ok');
-          startWS_Binance();startWS_Bybit();startWS_OKX();startWS_Coinbase();startWS_Kraken();
-          startWS_KuCoin();startWS_Gate();startWS_MEXC();startWS_BingX();startWS_CryptoCom();
-          startWS_HTX();startWS_BitMart();
-          setTimeout(scanLoop,1500);
-        });
-      }catch(startErr){
-        S.running=false;btn.textContent='▶ START SCAN';btn.className='';
-        xlog('Start error: '+startErr.message,'fail');
-        console.error('Start error:',startErr);
-      }
+    if(S.running){
+      S.running=false;clearTimeout(S.timer);stopAllWS();
+      btn.textContent='▶ START SCAN';btn.className='';
+      setStatus('idle');xlog('Scanner oprit','warn');
+    } else {
+      S.running=true;S._staleCount=0;
+      btn.textContent='■ STOP';btn.className='stop';
+      updateProxyBtn();
+      if(CORS_PROXY) xlog('✓ CORS Proxy: '+CORS_PROXY,'ok');
+      else xlog('⚠ Fără proxy — apasă ⚡ PROXY pentru KuCoin/HTX/BitMart','warn');
+      xlog('Scanner pornit ⚡ 14 exchange-uri · '+COINS.length+' monede','ok');
+      // Start all WebSocket feeds
+      startWS_Binance(); startWS_Bybit(); startWS_OKX();
+      startWS_Coinbase(); startWS_Kraken(); startWS_KuCoin();
+      startWS_Gate(); startWS_MEXC(); startWS_BingX();
+      startWS_CryptoCom(); startWS_HTX(); startWS_BitMart();
+      // discoverCoins din Binance/Bybit/OKX (CORS-friendly)
+      discoverCoins(function(){xlog('🔍 '+COINS.length+' monede după discovery','ok');});
+      setTimeout(scanLoop, 1500);
     }
   });
 }
 
-(function(){
-  try{
-    initExStatus();
-    initControls();
-    setStatus('idle');
-    var em=g('opp-empty');if(em)em.style.display='block';
-    xlog('ArbBot Manual v2.1 — 14 ex · 0.5s · '+COINS.length+' monede','ok');
-    xlog('WS live: Binance·Bybit·OKX·Coinbase·Kraken·KuCoin·Gate·MEXC·BingX·Crypto.com','info');
-    xlog('REST poll: Bitget','info');
-  }catch(e){
-    var errDiv=document.createElement('div');
-    errDiv.style.cssText='position:fixed;top:0;left:0;right:0;background:#f00;color:#fff;padding:12px;font-size:13px;z-index:9999;font-family:monospace';
-    errDiv.textContent='Init error: '+e.message+' — '+e.stack;
-    document.body.appendChild(errDiv);
-    console.error('ArbBot init error:',e);
+// ════════════════════════════════════
+// AUTO-DISCOVERY
+// ════════════════════════════════════
+var COINS_LOADED = false;
+function discoverCoins(callback){
+  var bad=new Set(['USDT','USDC','BUSD','TUSD','USDD','USDP','DAI','FRAX','LUSD',
+    'WBTC','WETH','WBNB','STETH','RETH','CBETH','WDOGE','WETC','PAXG','XAUT',
+    'LUNC','USTC','UST','FTT','LUNA','BVND','IDRT','UAH','AGEUR','EURC','EURT','FUN']);
+  var validCoin=function(c){return /^[A-Z][A-Z0-9]{1,7}$/.test(c)&&!bad.has(c);};
+  var discovered=new Set(COINS);
+  var done=0,total=3;
+  var finish=function(){
+    done++;
+    if(done>=total){
+      var prev=COINS.length;
+      COINS=Array.from(discovered).filter(validCoin).sort();
+      COINS_LOADED=true;
+      if(callback)callback();
+    }
+  };
+  fetch('https://api.binance.com/api/v3/exchangeInfo')
+    .then(function(r){return r.json();})
+    .then(function(d){(d.symbols||[]).forEach(function(s){if(s.status==='TRADING'&&(s.quoteAsset==='USDT'||s.quoteAsset==='USDC'))discovered.add(s.baseAsset);});finish();})
+    .catch(function(){finish();});
+  fetch('https://api.bybit.com/v5/market/instruments-info?category=spot&limit=1000')
+    .then(function(r){return r.json();})
+    .then(function(d){((d.result||{}).list||[]).forEach(function(s){if(s.status==='Trading'&&(s.quoteCoin==='USDT'||s.quoteCoin==='USDC'))discovered.add(s.baseCoin);});finish();})
+    .catch(function(){finish();});
+  fetch('https://www.okx.com/api/v5/public/instruments?instType=SPOT')
+    .then(function(r){return r.json();})
+    .then(function(d){(d.data||[]).forEach(function(s){if(s.state==='live'&&(s.quoteCcy==='USDT'||s.quoteCcy==='USDC'))discovered.add(s.baseCcy);});finish();})
+    .catch(function(){finish();});
+  if(CORS_PROXY){
+    fetch(CORS_PROXY+'?url='+encodeURIComponent('https://api.mexc.com/api/v3/exchangeInfo'))
+      .then(function(r){return r.json();})
+      .then(function(d){(d.symbols||[]).forEach(function(s){if(s.status==='ENABLED'&&(s.quoteAsset==='USDT'))discovered.add(s.baseAsset);});}).catch(function(){});
+    fetch(CORS_PROXY+'?url='+encodeURIComponent('https://api.gateio.ws/api/v4/spot/currency_pairs'))
+      .then(function(r){return r.json();})
+      .then(function(d){(d||[]).forEach(function(s){if(s.trade_status==='tradable'&&(s.quote==='USDT'))discovered.add(s.base);});}).catch(function(){});
   }
+}
+
+
+// Boot
+(function(){
+  initExStatus();
+  initSpeedBtns();
+  initStartBtn();
+  setStatus('idle');
+  g('opp-empty').style.display='block';
+  xlog('ArbBot Manual v1.0 — fără API keys, execuție manuală','ok');
+  xlog('11 exchange-uri: WS live (Binance/Bybit/OKX/Coinbase/Kraken) + REST (Gate/MEXC/Bitget/KuCoin/HTX/BingX)','info');
+  xlog('Click START SCAN pentru a căuta oportunități...','info');
 })();
 
 // ════════════════════════════════════
-// TICKER BAR
+// PROXY MODAL FUNCTIONS
 // ════════════════════════════════════
-var tickerArbs = [];
-var tickerAnimSpeed = 60; // seconds for full scroll
-
-function buildTickerItem(r) {
-  var spreadC = r.risk === 'safe' ? 'safe' : r.risk === 'med' ? 'med' : 'risky';
-  var buyN = EX[r.buyEx] ? EX[r.buyEx].n : r.buyEx;
-  var sellN = EX[r.sellEx] ? EX[r.sellEx].n : r.sellEx;
-  var profitStr = r.profit > 0 ? '+$' + r.profit.toFixed(2) : '$' + r.profit.toFixed(2);
-  var liqColor = r.liqLabel==='HIGH'?'#00ff88':r.liqLabel==='MED'?'#f5c842':r.liqLabel==='LOW'?'#ff8844':'#ff4466';
-  var liqBadge = r.liqLabel ? '<span style="font-size:6px;color:'+liqColor+';margin-left:2px">LIQ:'+r.liqLabel+'</span>' : '';
-  return '<div class="t-item ' + spreadC + '" onclick="selectArb(' + JSON.stringify(r).replace(/"/g,"'") + ')">'
-    + '<span class="t-coin">' + r.coin + '</span>'
-    + '<span class="t-badge">' + r.quote + '</span>'
-    + '<span class="t-route">' + buyN + '→' + sellN + '</span>'
-    + '<span class="t-spread">+' + r.net.toFixed(3) + '%</span>'
-    + '<span class="t-profit">' + profitStr + '</span>'
-    + liqBadge
-    + '</div>';
+function openProxyModal(){
+  document.getElementById('proxy-modal').style.display='flex';
+  document.getElementById('proxy-input').value=CORS_PROXY||'';
+  updateProxyStatus();
 }
-
-function updateTicker(results) {
-  var wrap = g('ticker-wrap');
-  var track = g('ticker-track');
-  if (!wrap || !track) return;
-
-  if (!results || results.length === 0) {
-    // Păstrează ticker-ul cu ultimele oportunități — nu reseta
-    return;
+function closeProxyModal(){
+  document.getElementById('proxy-modal').style.display='none';
+}
+function updateProxyStatus(){
+  var val=(document.getElementById('proxy-input').value||'').trim();
+  var st=document.getElementById('proxy-status');
+  if(!val) st.innerHTML='<span style="color:#666">⚪ Fără proxy — KuCoin/HTX/BitMart vor fi sărite</span>';
+  else if(val.startsWith('https://')) st.innerHTML='<span style="color:#f5c842">⏳ Apasă Testează sau Salvează</span>';
+  else st.innerHTML='<span style="color:#ff4466">⚠ URL invalid — trebuie https://</span>';
+}
+function saveProxy(){
+  var val=(document.getElementById('proxy-input').value||'').trim().replace(/\/$/,'');
+  CORS_PROXY=val;
+  try{localStorage.setItem('arb_cors_proxy',val);}catch(e){}
+  updateProxyBtn();
+  closeProxyModal();
+  if(val) xlog('✓ CORS Proxy salvat: '+val,'ok');
+  else xlog('Proxy șters','warn');
+}
+function testProxy(){
+  var val=(document.getElementById('proxy-input').value||'').trim().replace(/\/$/,'');
+  var st=document.getElementById('proxy-status');
+  if(!val||!val.startsWith('https://')){st.innerHTML='<span style="color:#ff4466">⚠ URL invalid</span>';return;}
+  st.innerHTML='<span style="color:#f5c842">⏳ Testez...</span>';
+  fetch(val+'?url='+encodeURIComponent('https://api.binance.com/api/v3/ping'),{cache:'no-store'})
+    .then(function(r){return r.json();})
+    .then(function(){st.innerHTML='<span style="color:#00ff88">✓ Proxy funcționează! Salvează și repornește scannerul.</span>';})
+    .catch(function(e){st.innerHTML='<span style="color:#ff4466">✗ Eroare: '+e.message+'</span>';});
+}
+function updateProxyBtn(){
+  var btn=document.getElementById('proxy-btn');if(!btn)return;
+  if(CORS_PROXY){
+    btn.style.background='#00ff88';btn.style.color='#000';
+    btn.style.borderColor='#00ff88';btn.textContent='⚡ PROXY ON';
+  } else {
+    btn.style.background='transparent';btn.style.color='#666';
+    btn.style.borderColor='#333';btn.textContent='⚡ PROXY';
   }
-
-  wrap.classList.add('active');
-
-  // Sort: safe first, then by net desc
-  var sorted = results.slice().sort(function(a,b){
-    var rO = {safe:0,med:1,risky:2};
-    if (rO[a.risk] !== rO[b.risk]) return rO[a.risk] - rO[b.risk];
-    return b.net - a.net;
-  });
-
-  // Build items HTML - duplicate for seamless loop
-  var items = sorted.map(buildTickerItem).join('<span class="t-sep">◆</span>');
-  var full = items + '<span class="t-sep" style="padding:0 20px">●●●</span>' + items;
-  track.innerHTML = full;
-
-  // Adjust speed based on count: more items = faster scroll to maintain density
-  var baseSpeed = Math.max(20, Math.min(80, sorted.length * 4));
-  track.style.animation = 'none';
-  track.offsetHeight; // reflow
-  track.style.animation = 'ticker-scroll ' + baseSpeed + 's linear infinite';
 }
+// Close proxy modal on backdrop click
+document.addEventListener('click',function(e){
+  var modal=document.getElementById('proxy-modal');
+  if(modal&&e.target===modal)closeProxyModal();
+});
+// Init proxy button state on load
+document.addEventListener('DOMContentLoaded',function(){
+  updateProxyBtn();
+});
 
 </script>
 </body>
-</html>
+</h
