@@ -996,7 +996,8 @@ function fetchGateRest(){
     });
 }
 function fetchMexcRest(){
-  return withTimeout(fetch('https://api.mexc.com/api/v3/ticker/bookTicker',{cache:'no-store'}),9000)
+  return withTimeout(
+    fetch((CORS_PROXY?CORS_PROXY+'?url='+encodeURIComponent('https://api.mexc.com/api/v3/ticker/bookTicker'):'https://api.mexc.com/api/v3/ticker/bookTicker'),{cache:'no-store'}),9000)
     .then(function(r){return r.json();}).then(function(list){
       var o={};
       list.forEach(function(t){
@@ -1041,7 +1042,7 @@ function fetchWexRest(){
 }
 
 function fetchKucoinRest(){
-  return withTimeout(fetch('https://api.kucoin.com/api/v1/market/allTickers',{cache:'no-store'}),10000)
+  return withTimeout(fetch((CORS_PROXY?CORS_PROXY+'?url='+encodeURIComponent('https://api.kucoin.com/api/v1/market/allTickers'):'https://api.kucoin.com/api/v1/market/allTickers'),{cache:'no-store'}),10000)
     .then(function(r){return r.json();}).then(function(d){
       var o={};
       ((d.data&&d.data.ticker)||[]).forEach(function(t){
@@ -1066,7 +1067,8 @@ function fetchHtxRest(){
     });
 }
 function fetchBingxRest(){
-  return withTimeout(fetch('https://open-api.bingx.com/openApi/spot/v2/market/tickers',{cache:'no-store'}),9000)
+  return withTimeout(
+    fetch((CORS_PROXY?CORS_PROXY+'?url='+encodeURIComponent('https://open-api.bingx.com/openApi/spot/v2/market/tickers'):'https://open-api.bingx.com/openApi/spot/v2/market/tickers'),{cache:'no-store'}),9000)
     .then(function(r){return r.json();}).then(function(d){
       var o={};
       (d.data||[]).forEach(function(t){
@@ -1107,16 +1109,22 @@ function fetchAllPrices(){
     });
   }
 
-  return Promise.all([
+  // REST calls — unele exchange-uri blochează CORS fără proxy
+  // Gate, Binance, Bybit, OKX, HTX = permit CORS
+  // MEXC, KuCoin, BingX = blochează CORS (necesită proxy)
+  var batches = [
     runBatch('binance', fetchBinanceRest),
     runBatch('bybit',   fetchBybitRest),
     runBatch('gate',    fetchGateRest),
-    runBatch('mexc',    fetchMexcRest),
-    runBatch('bitget',  fetchBitgetRest),
-    runBatch('kucoin',  fetchKucoinRest),
     runBatch('htx',     fetchHtxRest),
-    runBatch('bingx',   fetchBingxRest),
-  ]).then(function(){
+    runBatch('bitget',  fetchBitgetRest),
+  ];
+  if(CORS_PROXY){
+    batches.push(runBatch('mexc',   fetchMexcRest));
+    batches.push(runBatch('kucoin', fetchKucoinRest));
+    batches.push(runBatch('bingx',  fetchBingxRest));
+  }
+  return Promise.all(batches).then(function(){
     S.prices=prices;return prices;
   });
 }
@@ -1206,7 +1214,7 @@ function renderOpps(results){
     if(!staleBar){
       staleBar=document.createElement('div');staleBar.id='stale-bar';
       staleBar.style.cssText='font-size:9px;color:var(--yellow);text-align:center;padding:4px;opacity:.8;border-bottom:1px solid var(--border)';
-      if(list.parentNode)list.parentNode.insertBefore(staleBar,list);
+      try{if(list&&list.parentNode)list.parentNode.insertBefore(staleBar,list);}catch(e){}
     }
     S._staleCount=(S._staleCount||0)+1;
     var sec=Math.round(S._staleCount*SCAN_INTERVAL/1000);
@@ -1215,7 +1223,7 @@ function renderOpps(results){
     if(oc)oc.textContent='0 live ('+sec+'s vechi)';
     return;
   }
-  empty.style.display='none';
+  if(empty)empty.style.display='none';
   if(oc)oc.textContent=results.length+' găsite';
 
   // Check if best spread changed significantly
@@ -1291,7 +1299,12 @@ function selectArb(r){
   // Network warning block
   var nwEl=g('network-warn-block');
   if(!nwEl){nwEl=document.createElement('div');nwEl.id='network-warn-block';
-    var panel2=g('selected-opp');if(panel2)panel2.insertBefore(nwEl,panel2.querySelector('.steps')||panel2.firstChild);}
+    var panel2=g('selected-opp');
+    if(panel2){
+      var stepsEl=panel2.querySelector('.steps')||panel2.firstChild;
+      try{panel2.insertBefore(nwEl,stepsEl);}catch(e){panel2.appendChild(nwEl);}
+    }
+  }
   if(r.networkWarn){
     nwEl.style.cssText='background:rgba(255,30,30,.1);border:1px solid #ff4466;border-radius:6px;padding:10px 14px;margin-bottom:10px;font-size:11px;display:block';
     nwEl.innerHTML='<b style="color:#ff4466">⚠ REȚELE INCOMPATIBILE</b><br><span style="color:#aaa">'+r.networkWarn.msg+'</span>';
@@ -1391,6 +1404,7 @@ function updateExCount(){
 // TICKER BAR
 // ════════════════════════════════════
 function updateTicker(results){
+  try{
   var wrap=document.getElementById('ticker-wrap');
   var track=document.getElementById('ticker-track');
   if(!wrap||!track)return;
@@ -1428,9 +1442,12 @@ function updateTicker(results){
     track.appendChild(d);
   });
   var baseSpeed=Math.max(8,40-sorted.length*2);
-  track.style.animation='none';
-  track.offsetHeight;
-  track.style.animation='ticker-scroll '+baseSpeed+'s linear infinite';
+  if(track.style){
+    track.style.animation='none';
+    track.offsetHeight;
+    track.style.animation='ticker-scroll '+baseSpeed+'s linear infinite';
+  }
+  }catch(e){}
 }
 function selectOpp(coin){
   if(!S.results)return;
