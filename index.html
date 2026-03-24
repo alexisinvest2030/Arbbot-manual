@@ -75,7 +75,7 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .sep{color:var(--border2);margin:0 4px}
 
 /* ── MAIN GRID ── */
-#main{display:grid;grid-template-columns:1fr 340px;gap:8px}
+#main{display:grid;grid-template-columns:1fr 400px;gap:8px;align-items:start}
 @media(max-width:900px){#main{grid-template-columns:1fr}}
 
 /* ── PANEL ── */
@@ -96,7 +96,7 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .opp-empty{padding:40px;text-align:center;color:var(--text3);font-size:10px}
 .opp-empty .big{font-family:'Rajdhani',sans-serif;font-size:28px;color:var(--border2);display:block;margin-bottom:6px}
 
-.opp{border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;
+.opp{border:1px solid var(--border);border-radius:var(--r);padding:6px 10px;
   background:var(--bg3);position:relative;overflow:hidden;cursor:pointer;transition:.2s}
 .opp:hover{border-color:var(--border2)}
 .opp::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
@@ -366,7 +366,7 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
   </div>
 
   <!-- RIGHT: Instructions + helper -->
-  <div id="instr-panel">
+  <div id="instr-panel" style="position:sticky;top:8px">
 
     <!-- Instructions placeholder -->
     <div class="instr-card" id="instr-placeholder">
@@ -1198,14 +1198,35 @@ var WITHDRAWAL_CHAINS_STATIC = {
     'YGG':['ETH'],'ILV':['ETH'],'GODS':['ETH','IMX'],
     'FLOW':['FLOW'],'WAXP':['WAXP'],'GHST':['ETH','MATIC'],
     'AXL':['ETH','AXELAR'],'LOKA':['ETH','BSC'],
-    'NEIRO':['ETH'],'PEPE':['ETH','BSC'],
+    'NEIRO':['ETH'],  // Binance NEIRO = ETH chain
+    'PEPE':['ETH','BSC'],
+    // Tokeni noi cu chains specifice
+    'CAW':['ETH'],'ROOT':['ETH','BSC'],'RVV':['ETH'],
+    'TARA':['ETH','BSC'],'TURBO':['ETH'],'MOG':['ETH','BASE'],
+    'BRETT':['BASE'],'MOCHI':['BASE'],'DEGEN':['BASE'],
+    'WEN':['SOL'],'BODEN':['SOL'],'MOTHER':['SOL'],
+    'SLERF':['SOL'],'POPCAT':['SOL'],'MEW':['SOL'],
+    'FARTCOIN':['SOL'],'GOAT':['SOL'],'AI16Z':['SOL'],
+    'GRIFFAIN':['SOL'],'ZEREBRO':['SOL'],
+    'USUAL':['ETH'],'MORPHO':['ETH'],'EULER':['ETH'],
+    'SAFE':['ETH'],'COW':['ETH'],'FLUID':['ETH'],
+    'ONDO':['ETH','BSC'],'OMNI':['ETH'],
+    'LISTA':['BSC'],'BOME':['SOL'],
+    'PIXEL':['ETH'],'PIXELS':['ETH','RON'],
+    'PORTAL':['ETH','BSC'],'SAGA':['ETH'],
+    'MAVIA':['ETH','BSC'],'AEVO':['ETH'],
+    'ETHFI':['ETH'],'REZ':['ETH'],'ZIRCUIT':['ETH'],
+    'TAIKO':['ETH'],'ZK':['ETH'],'BLAST':['ETH'],
+    'MODE':['OP','ETH'],'MANTA':['ETH'],
   },
   bybit: {
-    // Bybit — diferențe față de Binance
     'FUN':['ETH','BSC'],'VIRTUAL':['BASE','ETH'],'TRUMP':['SOL'],
     'BONK':['SOL'],'WIF':['SOL'],'PENGU':['SOL'],'NOT':['TON'],
     'HYPE':['HYPE'],'MOVE':['MOVE'],'APT':['APT'],'SUI':['SUI'],
     'SEI':['SEI'],'TIA':['TIA'],'DYM':['ETH'],
+    'NEIRO':['ETH','SOL'],  // Bybit are ambele
+    'CAW':['ETH'],'ROOT':['ETH','BSC'],'TURBO':['ETH'],
+    'BRETT':['BASE','ETH'],'MOG':['ETH','BASE'],
   },
   okx: {
     'FUN':['ETH','BSC'],'VIRTUAL':['BASE','ETH','BSC'],
@@ -1215,18 +1236,33 @@ var WITHDRAWAL_CHAINS_STATIC = {
     'FUN':['BASE','ETH','BSC'],'VIRTUAL':['BASE','ETH','BSC'],
     'TRUMP':['SOL','ETH','BSC'],'HYPE':['HYPE','ETH'],
     'BONK':['SOL'],'WIF':['SOL'],'PENGU':['SOL'],
+    'NEIRO':['ETH','SOL'],'CAW':['ETH'],
+    'TURBO':['ETH'],'BRETT':['BASE','ETH'],'MOG':['ETH','BASE'],
+    'ROOT':['ETH','BSC'],'TARA':['ETH','BSC'],
   },
   mexc: {
-    // MEXC — similar cu Binance dar cu mai multe chain-uri pentru altcoins
     'FUN':['ETH','BSC'],'VIRTUAL':['BASE','ETH','BSC'],
+    'NEIRO':['SOL','ETH'],  // MEXC NEIRO = SOL sau ETH
+    'CAW':['ETH'],'ROOT':['BSC','ETH'],'RVV':['ETH','BSC'],
+    'TARA':['ETH','BSC'],'TURBO':['ETH'],'BRETT':['BASE','ETH'],
+    'MOG':['ETH','BASE'],'PEPE':['ETH','BSC'],
+    'GAS':['GAS','NEO'],  // Gas Town pe MEXC = NEO chain!
+    'ELON':['ETH','BSC'],  // MEXC ELON = Dogelon Mars pe ETH/BSC
   },
   gate: {
     'FUN':['ETH','BSC','BASE'],'VIRTUAL':['BASE','ETH'],
     'HYPE':['HYPE'],'TRUMP':['SOL','ETH'],
+    'NEIRO':['SOL','ETH'],  // Gate NEIRO = SOL sau ETH
+    'CAW':['ETH'],'ROOT':['ETH','BSC'],'RVV':['ETH'],
+    'TARA':['ETH','BSC'],'TURBO':['ETH'],
+    'BRETT':['BASE','ETH'],'MOG':['ETH','BASE'],
+    'RAI':['ETH'],  // Rai Reflex Index pe Gate = ETH
   },
   kucoin: {
     'FUN':['ETH','BSC'],'VIRTUAL':['ETH','BASE'],
-    'HYPE':['HYPE'],
+    'HYPE':['HYPE'],'NEIRO':['ETH','SOL'],
+    'TURBO':['ETH'],'MOG':['ETH'],
+    'TRUMP':['SOL','ETH'],'PENGU':['SOL'],
   },
   cryptocom: {
     'FUN':['CRO','ETH'],'VIRTUAL':['ETH'],
@@ -1270,6 +1306,56 @@ function hasCommonChain(buyEx, sellEx, coin){
   };
 }
 
+// Normalizează chain names la standard comun
+function normalizeChain(c){
+  if(!c) return '';
+  var u=c.toUpperCase().replace(/[-_\s]/g,'');
+  var map={
+    'ETH':'ETH','ETHEREUM':'ETH','ERC20':'ETH','ERC-20':'ETH',
+    'BSC':'BSC','BEP20':'BSC','BEP-20':'BSC','BINANCESMARTCHAIN':'BSC',
+    'SOL':'SOL','SOLANA':'SOL','SPL':'SOL',
+    'TRX':'TRX','TRON':'TRX','TRC20':'TRX','TRC-20':'TRX',
+    'MATIC':'MATIC','POLYGON':'MATIC','POLYGONPOS':'MATIC',
+    'ARB':'ARB','ARBITRUM':'ARB','ARBITRUMONE':'ARB',
+    'OP':'OP','OPTIMISM':'OP',
+    'AVAX':'AVAX','AVALANCHE':'AVAX','AVAXCCHAIN':'AVAX',
+    'BASE':'BASE',
+    'TON':'TON',
+    'APT':'APT','APTOS':'APT',
+    'SUI':'SUI',
+    'BTC':'BTC','BITCOIN':'BTC',
+    'LTC':'LTC','LITECOIN':'LTC',
+    'XRP':'XRP','RIPPLE':'XRP',
+    'ADA':'ADA','CARDANO':'ADA',
+    'DOT':'DOT','POLKADOT':'DOT',
+    'ATOM':'ATOM','COSMOS':'ATOM',
+    'NEO':'NEO','NEO3':'NEO',
+    'ONT':'ONT','ONTOLOGY':'ONT',
+    'HBAR':'HBAR','HEDERA':'HBAR',
+    'ALGO':'ALGO','ALGORAND':'ALGO',
+    'XLM':'XLM','STELLAR':'XLM',
+    'XMR':'XMR','MONERO':'XMR',
+    'CRO':'CRO','CRONOS':'CRO',
+    'IMX':'IMX','IMMUTABLEX':'IMX',
+    'FLOW':'FLOW',
+    'ICP':'ICP',
+    'NEAR':'NEAR',
+    'KSM':'KSM','KUSAMA':'KSM',
+    'ZEN':'ZEN','HORIZEN':'ZEN',
+    'OASIS':'OASIS','ROSE':'OASIS',
+    'CELO':'CELO',
+    'GLMR':'GLMR','MOONBEAM':'GLMR',
+    'MOVR':'MOVR','MOONRIVER':'MOVR',
+    'KLAY':'KLAY','KLAYTN':'KLAY',
+    'FTM':'FTM','FANTOM':'FTM',
+    'ONE':'ONE','HARMONY':'ONE',
+    'ZKSYNC':'ZKSYNC','ZKSYNCERA':'ZKSYNC',
+    'STARKNET':'STRK',
+    'HYPE':'HYPE','HYPERLIQUID':'HYPE',
+  };
+  return map[u]||c.toUpperCase();
+}
+
 // Fetch live chain data din API-uri publice (Gate, KuCoin, HTX, Bitget)
 function fetchWithdrawalChains(){
   if(WITHDRAWAL_CHAINS_LOADING) return;
@@ -1291,10 +1377,10 @@ function fetchWithdrawalChains(){
       (list||[]).forEach(function(c){
         var coin=c.currency;
         if(!coin||!COINS.includes(coin)) return;
-        // Gate returnează chains în format: "ETH,BSC" sau similar
         var chains=[];
         if(c.chain) chains=[c.chain];
-        if(c.chains) chains=c.chains;
+        if(c.chains) chains=Array.isArray(c.chains)?c.chains:[c.chains];
+        chains=chains.map(normalizeChain).filter(function(x){return x;});
         if(chains.length>0) WITHDRAWAL_CHAINS_LIVE.gate[coin]=chains;
       });
       xlog('✓ Gate chains loaded: '+Object.keys(WITHDRAWAL_CHAINS_LIVE.gate).length+' coins','ok');
@@ -1310,7 +1396,7 @@ function fetchWithdrawalChains(){
         if(!coin||!COINS.includes(coin)) return;
         var chains=(c.chains||[])
           .filter(function(ch){return ch.withdrawable==='true'||ch.withdrawable===true;})
-          .map(function(ch){return ch.chain||ch.chainName||'';})
+          .map(function(ch){return normalizeChain(ch.chain||ch.chainName||'');})
           .filter(function(ch){return ch;});
         if(chains.length>0) WITHDRAWAL_CHAINS_LIVE.bitget[coin]=chains;
       });
@@ -1327,7 +1413,7 @@ function fetchWithdrawalChains(){
         if(!coin||!COINS.includes(coin)) return;
         var chains=(c.chains||[])
           .filter(function(ch){return ch.withdrawStatus==='allowed';})
-          .map(function(ch){return (ch.baseChain||ch.chain||'').toUpperCase();})
+          .map(function(ch){return normalizeChain(ch.baseChain||ch.chain||'');})
           .filter(function(ch){return ch;});
         if(chains.length>0) WITHDRAWAL_CHAINS_LIVE.htx[coin]=chains;
       });
@@ -1344,7 +1430,7 @@ function fetchWithdrawalChains(){
         if(!coin||!COINS.includes(coin)) return;
         var chains=(c.chains||[])
           .filter(function(ch){return ch.isWithdrawEnabled;})
-          .map(function(ch){return (ch.chainName||ch.chain||'').toUpperCase();})
+          .map(function(ch){return normalizeChain(ch.chainName||ch.chain||'');})
           .filter(function(ch){return ch;});
         if(chains.length>0) WITHDRAWAL_CHAINS_LIVE.kucoin[coin]=chains;
       });
@@ -1603,7 +1689,7 @@ function renderOpps(results){
   prevKeys._last=newKeys;
 
   list.innerHTML='';
-  results.slice(0,12).forEach(function(r,i){
+  results.forEach(function(r,i){
     var div=document.createElement('div');
     div.className='opp '+r.risk+(i<3?' NEW':'');
     div.onclick=function(){selectArb(r);};
