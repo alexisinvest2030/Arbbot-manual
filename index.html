@@ -1136,6 +1136,318 @@ function fetchAllPrices(){
 // ═══════════════════════════════════════════
 // ARB CALCULATOR
 // ═══════════════════════════════════════════
+
+
+// ════════════════════════════════════════════════════════════════
+// WITHDRAWAL CHAIN COMPATIBILITY SYSTEM
+// Verifică dacă poți transfera un token între 2 exchange-uri
+// pe același chain (fără bridge costisitor)
+// ════════════════════════════════════════════════════════════════
+
+// Map static pentru exchange-uri fără API public de withdrawal
+// Format: {exchange: {coin: [chains...]}}
+// Chains standardizate: ETH, BSC, SOL, TRX, MATIC, ARB, OP, AVAX, 
+//                       BASE, TON, APT, SUI, ATOM, DOT, etc.
+var WITHDRAWAL_CHAINS_STATIC = {
+  binance: {
+    'BTC':['BTC','ETH','BSC','ARB','OP','AVAX'],'ETH':['ETH','BSC','ARB','OP','AVAX','BASE'],
+    'BNB':['BSC','ETH'],'SOL':['SOL'],'XRP':['XRP'],'ADA':['ADA'],'DOGE':['DOGE'],
+    'TRX':['TRX'],'TON':['TON'],'AVAX':['AVAX','ETH','BSC'],'LINK':['ETH','BSC','ARB','OP'],
+    'DOT':['DOT'],'UNI':['ETH','BSC','ARB','OP'],'LTC':['LTC'],'BCH':['BCH'],
+    'APT':['APT'],'ARB':['ARB','ETH'],'OP':['OP','ETH'],'INJ':['INJ','ETH','BSC'],
+    'SUI':['SUI'],'NEAR':['NEAR'],'FIL':['FIL'],'ATOM':['ATOM'],'ALGO':['ALGO'],
+    'VET':['VET'],'HBAR':['HBAR'],'EGLD':['EGLD'],'SAND':['ETH','BSC','MATIC'],
+    'AXS':['ETH'],'MANA':['ETH','MATIC'],'ENJ':['ETH','MATIC'],'CHZ':['ETH','BSC'],
+    'GALA':['ETH','BSC'],'ICP':['ICP'],'ETC':['ETC'],'MATIC':['MATIC','ETH','BSC'],
+    'FTM':['FTM','ETH','BSC'],'AAVE':['ETH','BSC','ARB','OP','MATIC'],'MKR':['ETH'],
+    'CRV':['ETH','BSC','ARB','OP'],'PEPE':['ETH','BSC'],'SHIB':['ETH','BSC'],
+    'FLOKI':['ETH','BSC'],'BONK':['SOL'],'WIF':['SOL'],'BOME':['SOL'],'MYRO':['SOL'],
+    'POPCAT':['SOL'],'PENGU':['SOL','ETH'],'PNUT':['SOL'],'JTO':['SOL'],'JUP':['SOL'],
+    'RAY':['SOL'],'PYTH':['SOL'],'ORCA':['SOL'],'GRT':['ETH','ARB'],'ENS':['ETH'],
+    'LDO':['ETH','ARB'],'SNX':['ETH','OP','BSC'],'COMP':['ETH'],'CRO':['CRO','ETH'],
+    'KSM':['KSM'],'OSMO':['OSMO'],'TIA':['TIA'],'RUNE':['RUNE'],'HIVE':['HIVE'],
+    'XMR':['XMR'],'ZEC':['ZEC'],'DASH':['DASH'],'ZIL':['ZIL','ETH','BSC'],
+    'HOT':['ETH'],'DENT':['ETH'],'WIN':['TRX','ETH'],'BTT':['TRX','ETH','BSC'],
+    'BAND':['ETH','BSC'],'XNO':['XNO'],'DCR':['DCR'],'XLM':['XLM'],'XEM':['XEM'],
+    'ONT':['ONT','ETH'],'NEO':['NEO'],'ICX':['ICX'],'QTUM':['QTUM'],'ZEN':['ZEN'],
+    'RVN':['RVN'],'DGB':['DGB'],'IOTA':['IOTA'],'IOTX':['ETH','BSC','IOTX'],
+    'CELO':['CELO','ETH'],'GLMR':['GLMR'],'MOVR':['MOVR'],'KAR':['KAR'],'ACA':['ACA'],
+    'CLV':['ETH','BSC'],'ONE':['ONE','ETH'],'KLAY':['KLAY'],'IMX':['ETH','IMX'],
+    'BLUR':['ETH'],'LOOKS':['ETH'],'DYDX':['ETH','DYDX'],'GMX':['ARB','AVAX'],
+    'PENDLE':['ETH','ARB','BSC'],'STRK':['ETH'],'MANTA':['ETH'],'BLAST':['ETH'],
+    'ZK':['ETH'],'SCROLL':['ETH'],'TAIKO':['ETH'],'DYM':['ETH'],'SAGA':['ETH'],
+    'ZETA':['ZETA','ETH','BSC'],'FUN':['ETH'],
+    'RENDER':['ETH','SOL'],'TAO':['ETH'],'WLD':['OP','ETH'],'NOT':['TON'],
+    'TRUMP':['SOL','ETH'],'USUAL':['ETH'],'EIGEN':['ETH'],'ENA':['ETH','BSC'],
+    'ETHFI':['ETH'],'W':['SOL','ETH'],'ZRO':['ETH','ARB','OP','BSC'],
+    'POL':['MATIC','ETH'],'MOVE':['ETH'],'HYPE':['HYPE'],'KAITO':['ETH'],
+    'SIGN':['ETH','BSC'],'RED':['ETH','BSC'],'UXLINK':['ETH','ARB'],
+    'VIRTUAL':['ETH','BASE'],'SEI':['SEI'],'DUSK':['ETH','BSC'],
+    'STORJ':['ETH'],'OXT':['ETH'],'SC':['SC'],'KINT':['ETH'],
+    'WAN':['WAN','ETH'],'WAVES':['WAVES','ETH'],'DVPN':['COSMOS'],
+    'ROSE':['OASIS'],'CFX':['CFX','ETH','BSC'],'CELR':['ETH','BSC'],
+    'CKB':['CKB'],'CTSI':['ETH','BSC'],'SXP':['ETH','BSC'],
+    'STMX':['ETH','BSC'],'DOCK':['ETH'],'DUSK':['ETH','BSC'],
+    'FOR':['ETH','BSC'],'OGN':['ETH'],'POND':['ETH'],
+    'NKN':['ETH'],'ARPA':['ETH','BSC'],'TROY':['ETH','BSC'],
+    'TRB':['ETH'],'LINA':['ETH','BSC'],'BETA':['BSC'],
+    'BAKE':['BSC'],'BURGER':['BSC'],'CHESS':['BSC'],
+    'WING':['ONT','ETH','BSC'],'MDX':['BSC','HECO'],
+    'SFP':['ETH','BSC'],'VITE':['VITE'],'SRM':['SOL','ETH'],
+    'ATLAS':['SOL'],'POLIS':['SOL'],'SLP':['ETH','RON'],
+    'YGG':['ETH'],'ILV':['ETH'],'GODS':['ETH','IMX'],
+    'FLOW':['FLOW'],'WAXP':['WAXP'],'GHST':['ETH','MATIC'],
+    'AXL':['ETH','AXELAR'],'LOKA':['ETH','BSC'],
+    'NEIRO':['ETH'],'PEPE':['ETH','BSC'],
+  },
+  bybit: {
+    // Bybit — diferențe față de Binance
+    'FUN':['ETH','BSC'],'VIRTUAL':['BASE','ETH'],'TRUMP':['SOL'],
+    'BONK':['SOL'],'WIF':['SOL'],'PENGU':['SOL'],'NOT':['TON'],
+    'HYPE':['HYPE'],'MOVE':['MOVE'],'APT':['APT'],'SUI':['SUI'],
+    'SEI':['SEI'],'TIA':['TIA'],'DYM':['ETH'],
+  },
+  okx: {
+    'FUN':['ETH','BSC'],'VIRTUAL':['BASE','ETH','BSC'],
+    'TRUMP':['SOL','ETH'],'HYPE':['HYPE'],
+  },
+  bitget: {
+    'FUN':['BASE','ETH','BSC'],'VIRTUAL':['BASE','ETH','BSC'],
+    'TRUMP':['SOL','ETH','BSC'],'HYPE':['HYPE','ETH'],
+    'BONK':['SOL'],'WIF':['SOL'],'PENGU':['SOL'],
+  },
+  mexc: {
+    // MEXC — similar cu Binance dar cu mai multe chain-uri pentru altcoins
+    'FUN':['ETH','BSC'],'VIRTUAL':['BASE','ETH','BSC'],
+  },
+  gate: {
+    'FUN':['ETH','BSC','BASE'],'VIRTUAL':['BASE','ETH'],
+    'HYPE':['HYPE'],'TRUMP':['SOL','ETH'],
+  },
+  kucoin: {
+    'FUN':['ETH','BSC'],'VIRTUAL':['ETH','BASE'],
+    'HYPE':['HYPE'],
+  },
+  cryptocom: {
+    'FUN':['CRO','ETH'],'VIRTUAL':['ETH'],
+  },
+};
+
+// Cache pentru chain-urile fetchate live (din Gate, KuCoin, HTX, Bitget)
+var WITHDRAWAL_CHAINS_LIVE = {};
+var WITHDRAWAL_CHAINS_LOADED = false;
+var WITHDRAWAL_CHAINS_LOADING = false;
+var WITHDRAWAL_CHAINS_LAST_FETCH = 0;
+var WITHDRAWAL_CHAINS_TTL = 3600000; // 1 oră cache
+
+// Obține chain-urile de withdrawal pentru un coin pe un exchange
+function getWithdrawalChains(exchange, coin){
+  // 1. Prioritate: date live dacă există
+  if(WITHDRAWAL_CHAINS_LIVE[exchange]&&WITHDRAWAL_CHAINS_LIVE[exchange][coin]){
+    return WITHDRAWAL_CHAINS_LIVE[exchange][coin];
+  }
+  // 2. Fallback: map static
+  var staticEx=WITHDRAWAL_CHAINS_STATIC[exchange];
+  if(staticEx&&staticEx[coin]) return staticEx[coin];
+  // 3. Fallback la Binance ca referință pentru exchanges fără date specifice
+  if(exchange!=='binance'&&WITHDRAWAL_CHAINS_STATIC.binance[coin]){
+    return WITHDRAWAL_CHAINS_STATIC.binance[coin]; // estimare
+  }
+  return null; // necunoscut
+}
+
+// Verifică dacă 2 exchange-uri au un chain comun pentru un coin
+function hasCommonChain(buyEx, sellEx, coin){
+  var buyChains=getWithdrawalChains(buyEx, coin);
+  var sellChains=getWithdrawalChains(sellEx, coin);
+  if(!buyChains||!sellChains) return null; // necunoscut — nu blocăm
+  var common=buyChains.filter(function(c){return sellChains.indexOf(c)>=0;});
+  return {
+    compatible: common.length>0,
+    common: common,
+    buyChains: buyChains,
+    sellChains: sellChains,
+  };
+}
+
+// Fetch live chain data din API-uri publice (Gate, KuCoin, HTX, Bitget)
+function fetchWithdrawalChains(){
+  if(WITHDRAWAL_CHAINS_LOADING) return;
+  if(Date.now()-WITHDRAWAL_CHAINS_LAST_FETCH < WITHDRAWAL_CHAINS_TTL) return;
+  WITHDRAWAL_CHAINS_LOADING=true;
+  WITHDRAWAL_CHAINS_LAST_FETCH=Date.now();
+
+  var proxyFn=function(url){
+    return CORS_PROXY
+      ? fetch(CORS_PROXY+'?url='+encodeURIComponent(url),{cache:'no-store'})
+      : fetch(url,{cache:'no-store'});
+  };
+
+  // Gate.io — returnează chains per currency (PUBLIC)
+  proxyFn('https://api.gateio.ws/api/v4/spot/currencies')
+    .then(function(r){return r.json();})
+    .then(function(list){
+      if(!WITHDRAWAL_CHAINS_LIVE.gate) WITHDRAWAL_CHAINS_LIVE.gate={};
+      (list||[]).forEach(function(c){
+        var coin=c.currency;
+        if(!coin||!COINS.includes(coin)) return;
+        // Gate returnează chains în format: "ETH,BSC" sau similar
+        var chains=[];
+        if(c.chain) chains=[c.chain];
+        if(c.chains) chains=c.chains;
+        if(chains.length>0) WITHDRAWAL_CHAINS_LIVE.gate[coin]=chains;
+      });
+      xlog('✓ Gate chains loaded: '+Object.keys(WITHDRAWAL_CHAINS_LIVE.gate).length+' coins','ok');
+    }).catch(function(){});
+
+  // Bitget — /api/v2/spot/public/coins (PUBLIC, returnează chains)
+  fetch('https://api.bitget.com/api/v2/spot/public/coins',{cache:'no-store'})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!WITHDRAWAL_CHAINS_LIVE.bitget) WITHDRAWAL_CHAINS_LIVE.bitget={};
+      (d.data||[]).forEach(function(c){
+        var coin=c.coinName;
+        if(!coin||!COINS.includes(coin)) return;
+        var chains=(c.chains||[])
+          .filter(function(ch){return ch.withdrawable==='true'||ch.withdrawable===true;})
+          .map(function(ch){return ch.chain||ch.chainName||'';})
+          .filter(function(ch){return ch;});
+        if(chains.length>0) WITHDRAWAL_CHAINS_LIVE.bitget[coin]=chains;
+      });
+      xlog('✓ Bitget chains loaded: '+Object.keys(WITHDRAWAL_CHAINS_LIVE.bitget).length+' coins','ok');
+    }).catch(function(){});
+
+  // HTX — /v2/reference/currencies (PUBLIC)
+  proxyFn('https://api.huobi.pro/v2/reference/currencies')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!WITHDRAWAL_CHAINS_LIVE.htx) WITHDRAWAL_CHAINS_LIVE.htx={};
+      (d.data||[]).forEach(function(c){
+        var coin=(c.currency||'').toUpperCase();
+        if(!coin||!COINS.includes(coin)) return;
+        var chains=(c.chains||[])
+          .filter(function(ch){return ch.withdrawStatus==='allowed';})
+          .map(function(ch){return (ch.baseChain||ch.chain||'').toUpperCase();})
+          .filter(function(ch){return ch;});
+        if(chains.length>0) WITHDRAWAL_CHAINS_LIVE.htx[coin]=chains;
+      });
+      xlog('✓ HTX chains loaded: '+Object.keys(WITHDRAWAL_CHAINS_LIVE.htx).length+' coins','ok');
+    }).catch(function(){});
+
+  // KuCoin — /api/v2/currencies (PUBLIC, but may need proxy)
+  proxyFn('https://api.kucoin.com/api/v2/currencies')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!WITHDRAWAL_CHAINS_LIVE.kucoin) WITHDRAWAL_CHAINS_LIVE.kucoin={};
+      ((d.data)||[]).forEach(function(c){
+        var coin=c.currency;
+        if(!coin||!COINS.includes(coin)) return;
+        var chains=(c.chains||[])
+          .filter(function(ch){return ch.isWithdrawEnabled;})
+          .map(function(ch){return (ch.chainName||ch.chain||'').toUpperCase();})
+          .filter(function(ch){return ch;});
+        if(chains.length>0) WITHDRAWAL_CHAINS_LIVE.kucoin[coin]=chains;
+      });
+      xlog('✓ KuCoin chains loaded: '+Object.keys(WITHDRAWAL_CHAINS_LIVE.kucoin).length+' coins','ok');
+    }).catch(function(){});
+
+  setTimeout(function(){ WITHDRAWAL_CHAINS_LOADING=false; WITHDRAWAL_CHAINS_LOADED=true; }, 10000);
+}
+
+
+// ════════════════════════════════════════════════════════════════
+// TICKER COLLISION MAP
+// Ticker-uri cu tokeni diferiți pe exchange-uri diferite
+// Format: 'TICKER': {exchange_de_exclus: true}
+// Sau: 'TICKER': {exchange_valid: 'keep'} — păstrează doar pe unele
+// ════════════════════════════════════════════════════════════════
+var TICKER_COLLISIONS = {
+  // GAS: NeoGas (Binance/Bybit/OKX) vs Gas Town (MEXC)
+  'GAS':  {mexc: true, bingx: true},
+
+  // ELON: Dogelon Mars (Binance/Bybit) vs alte tokeni ELON pe alte exchange-uri
+  'ELON': {mexc: true, gate: true, kucoin: true, bitmart: true},
+
+  // RAI: Rai Reflex Index (mainstream) vs Replay/alte RAI pe exchange-uri mici
+  'RAI':  {gate: true, mexc: true, bitmart: true, wex: true},
+
+  // HEART: diferite tokeni pe exchange-uri diferite
+  'HEART': {mexc: true, gate: true},
+
+  // BLOCK: diferite tokeni
+  'BLOCK': {mexc: true, bingx: true},
+
+  // CITY: Manchester City Fan Token (Binance) vs City Coin (altele)
+  'CITY': {mexc: true, gate: true, wex: true},
+
+  // PLAY: diferite tokeni gaming
+  'PLAY': {mexc: true, gate: true, kucoin: true},
+
+  // DREAM: diferite tokeni
+  'DREAM': {mexc: true, gate: true},
+
+  // HERO: diferite tokeni
+  'HERO': {mexc: true, bitmart: true, wex: true},
+
+  // TIME: Wonderland (Binance) vs alte TIME tokeni
+  'TIME': {mexc: true, gate: true, wex: true},
+
+  // LOOKS: LooksRare (Binance/OKX) vs alte tokeni
+  'LOOKS': {mexc: true, wex: true},
+
+  // CHESS: Tranchess (Binance) vs Chess tokeni pe alte ex
+  'CHESS': {mexc: true, gate: true},
+
+  // WING: Wing Finance (Binance) vs alte Wing tokeni
+  'WING':  {mexc: true, gate: true, wex: true},
+
+  // ACE: TokenAce (Bybit) vs alte ACE tokeni
+  'ACE':   {mexc: true, gate: true, wex: true, bitmart: true},
+
+  // FOR: ForTube (Binance) vs alte FOR tokeni
+  'FOR':   {mexc: true, wex: true},
+
+  // PROS: Prosper (Binance) vs alte PROS
+  'PROS':  {mexc: true, gate: true},
+
+  // GODS: Gods Unchained vs alte GODS tokeni
+  'GODS':  {mexc: true, wex: true},
+
+  // KEY: SelfKey (Binance) vs alte KEY tokeni
+  'KEY':   {mexc: true, bitmart: true, wex: true},
+
+  // WIN: WINkLink (Binance) vs alte WIN tokeni
+  'WIN':   {gate: true, wex: true},
+
+  // SC: Siacoin (Binance) vs alte SC tokeni
+  'SC':    {mexc: true, gate: true, wex: true},
+
+  // GNX: Genaro Network (vechi) vs alte GNX
+  'GNX':  {mexc: true, gate: true, wex: true},
+
+  // SKL: SKALE (Binance) vs alte SKL
+  'SKL':  {wex: true},
+
+  // CLV: Clover Finance vs alte CLV
+  'CLV':  {wex: true, bitmart: true},
+
+  // MOD: modefi vs alte MOD tokeni
+  'MOD':  {mexc: true, gate: true, wex: true},
+
+  // ROBO: diferite tokeni
+  'ROBO': {mexc: true, gate: true, wex: true},
+
+  // Tokeni MEXC-specific care nu sunt pe alte exchange-uri
+  // (au prețuri aberante din cauza diferențelor de token)
+  'HYPE': {wex: true},
+  'FARM': {wex: true, bitmart: true},
+};
+
+// Ratio maxim acceptat între prețul celui mai scump și cel mai ieftin exchange
+// Dacă un exchange are prețul de 10x+ față de media — probabil token diferit
+var MAX_PRICE_RATIO = 5.0; // 500% diferență max între exchange-uri pentru același coin
+
+
 function calcArb(coin,quote,prices){
   var bids={},asks={},liqBid={},liqAsk={};
   var KNOWN_NETWORKS={
@@ -1148,6 +1460,8 @@ function calcArb(coin,quote,prices){
   };
   EXK.forEach(function(ek){
     if(ARB_EXCLUDED[ek])return;
+    // TICKER COLLISION: exclude exchange-uri unde acest ticker e un token diferit
+    if(TICKER_COLLISIONS[coin]&&TICKER_COLLISIONS[coin][ek])return;
     var p=prices[coin+'_'+quote+'_'+ek];
     if(!p||p.bid<=0||p.ask<=0)return;
     var hasLiq=p.askLiq!=null&&p.bidLiq!=null;
@@ -1166,6 +1480,36 @@ function calcArb(coin,quote,prices){
   var bkArr=Object.keys(asks).sort(function(a,b){return asks[a]-asks[b];});
   var skArr=Object.keys(bids).sort(function(a,b){return bids[b]-bids[a];});
   if(!bkArr.length||!skArr.length)return null;
+
+  // PRICE RATIO CHECK: dacă prețurile diferă prea mult → tokeni diferiți
+  // Ex: GAS $3 pe Binance vs GAS $0.000001 pe MEXC = clar tokeni diferiți
+  var allPrices=Object.values(asks).concat(Object.values(bids));
+  if(allPrices.length>=2){
+    var pMin=Math.min.apply(null,allPrices);
+    var pMax=Math.max.apply(null,allPrices);
+    if(pMin>0&&pMax/pMin>MAX_PRICE_RATIO){
+      // Prețuri prea diferite — elimină exchange-urile cu prețuri aberante
+      // Calculează mediana și elimină outlier-ii
+      var sorted_p=allPrices.slice().sort(function(a,b){return a-b;});
+      var median=sorted_p[Math.floor(sorted_p.length/2)];
+      Object.keys(asks).forEach(function(ek){
+        if(asks[ek]>median*MAX_PRICE_RATIO||asks[ek]*MAX_PRICE_RATIO<median){
+          delete asks[ek];delete bids[ek];
+          delete liqAsk[ek];delete liqBid[ek];
+        }
+      });
+      Object.keys(bids).forEach(function(ek){
+        if(bids[ek]>median*MAX_PRICE_RATIO||bids[ek]*MAX_PRICE_RATIO<median){
+          delete bids[ek];delete asks[ek];
+          delete liqAsk[ek];delete liqBid[ek];
+        }
+      });
+      // Recalculează arrays după filtrare
+      bkArr=Object.keys(asks).sort(function(a,b){return asks[a]-asks[b];});
+      skArr=Object.keys(bids).sort(function(a,b){return bids[b]-bids[a];});
+      if(!bkArr.length||!skArr.length)return null;
+    }
+  }
   var bk=bkArr[0],sk=skArr[0];
   if(bk===sk){if(bkArr.length>1)bk=bkArr[1];else if(skArr.length>1)sk=skArr[1];else return null;}
   if(bk===sk)return null;
@@ -1176,7 +1520,28 @@ function calcArb(coin,quote,prices){
   var impactSell=availSell<999999?(TRADE_SIZE/availSell)*0.5:0;
   var gross=(sellBid-buyAsk)/buyAsk*100,fees=(TAKER[bk]+TAKER[sk])*100;
   var net=gross-fees-0.01-impactBuy-impactSell;
-  // Network warning
+  // ════ WITHDRAWAL CHAIN COMPATIBILITY CHECK ════
+  var chainCheck=hasCommonChain(bk, sk, coin);
+  var chainWarn=null;
+
+  if(chainCheck!==null){
+    if(!chainCheck.compatible){
+      // INCOMPATIBIL: niciun chain comun → returnăm null (arb imposibil fără bridge)
+      return null;
+    } else if(chainCheck.common.length>0){
+      // Compatibil — notăm chain-ul comun
+      chainWarn={
+        compatible:true,
+        chain:chainCheck.common[0], // best common chain
+        allCommon:chainCheck.common,
+        buyChains:chainCheck.buyChains,
+        sellChains:chainCheck.sellChains,
+        msg:'Transfer posibil pe: '+chainCheck.common.join(', ')
+      };
+    }
+  }
+
+  // Network warning (legacy Solana check)
   var netN=KNOWN_NETWORKS[coin];
   var netWarn=null;
   if(netN&&netN[bk]&&netN[sk]&&netN[bk]!==netN[sk]){
@@ -1190,7 +1555,9 @@ function calcArb(coin,quote,prices){
   return {coin:coin,quote:quote,buyEx:bk,sellEx:sk,buyAsk:buyAsk,sellBid:sellBid,
     gross:gross,fees:fees,net:net,profit:profit,qty:qty,allBids:bids,allAsks:asks,
     availBuy:availBuy,availSell:availSell,liqLabel:liqLabel,impact:impactBuy+impactSell,
-    networkWarn:netWarn,risk:net>=0.4?'safe':net>=0.2?'med':'risky',ts:Date.now()};
+    networkWarn:netWarn,chainInfo:chainWarn,
+    risk:net>=0.4?'safe':net>=0.2?'med':'risky',ts:Date.now(),
+    collisionFiltered:(TICKER_COLLISIONS[coin]&&Object.keys(TICKER_COLLISIONS[coin]).length>0)};
 }
 
 function findArbs(prices){
@@ -1251,6 +1618,9 @@ function renderOpps(results){
           +(r.risk==='safe'?'<span style="color:var(--green);font-size:8px">SAFE</span>':r.risk==='med'?'<span style="color:var(--yellow);font-size:8px">MED</span>':'<span style="color:var(--red);font-size:8px">RISKY</span>')
           +(r.liqLabel?'<span style="font-size:7px;color:'+(r.liqLabel==='HIGH'?'#00ff88':r.liqLabel==='MED'?'#f5c842':'#ff8844')+';border:1px solid currentColor;border-radius:3px;padding:0 3px">'+r.liqLabel+'</span>':'')
           +(r.networkWarn?'<span style="font-size:7px;color:#ff4466;border:1px solid #ff4466;border-radius:3px;padding:0 3px">NET!</span>':'')
+          +(r.collisionFiltered?'<span style="font-size:7px;color:#ff8800;border:1px solid #ff8800;border-radius:3px;padding:0 3px" title="Unele exchange-uri excluse — ticker coliziune">⚠TICKER</span>':'')
+          +(r.chainInfo&&r.chainInfo.compatible?'<span style="font-size:7px;color:#00ccff;border:1px solid #00ccff;border-radius:3px;padding:0 3px" title="'+r.chainInfo.msg+'">⛓'+r.chainInfo.chain+'</span>':'')
+          +(!r.chainInfo?'<span style="font-size:7px;color:#888;border:1px solid #555;border-radius:3px;padding:0 3px" title="Chain necunoscut — verifică manual">?CHAIN</span>':'')
         +'</div>'
         +'<span class="opp-spread" style="color:'+spreadColor+'">+'+r.net.toFixed(3)+'%</span>'
       +'</div>'
@@ -1329,6 +1699,34 @@ function selectArb(r){
     +liqBuyStr;
 
   // Step 3
+  // Chain compatibility info în instrucțiuni
+  var chainInfoHtml='';
+  if(r.chainInfo&&r.chainInfo.compatible){
+    var bestChain=r.chainInfo.chain;
+    var chainColor=bestChain==='ETH'?'#ff8800':bestChain==='BSC'?'#f5c842':bestChain==='SOL'?'#9945ff':bestChain==='TRX'?'#ff0013':'#00ccff';
+    chainInfoHtml='<div style="background:rgba(0,200,255,.08);border:1px solid #00ccff44;border-radius:6px;padding:8px 12px;margin-bottom:8px;font-size:10px">'
+      +'<b style="color:#00ccff">⛓ Transfer pe: '+r.chainInfo.allCommon.join(' sau ')+'</b><br>'
+      +'<span style="color:#aaa">'
+      +buyName+' withdrawal chains: <b>'+r.chainInfo.buyChains.join(', ')+'</b><br>'
+      +sellName+' deposit chains: <b>'+r.chainInfo.sellChains.join(', ')+'</b>'
+      +'</span></div>';
+  } else if(!r.chainInfo){
+    chainInfoHtml='<div style="background:rgba(100,100,100,.1);border:1px solid #444;border-radius:6px;padding:8px 12px;margin-bottom:8px;font-size:10px;color:#888">'
+      +'⚠ Chain necunoscut — verifică manual pe exchange că retragerea e disponibilă pe același chain'
+      +'</div>';
+  }
+  var nwBlock=document.getElementById('chain-info-block');
+  if(!nwBlock){
+    nwBlock=document.createElement('div');nwBlock.id='chain-info-block';
+    var selPanel=document.getElementById('selected-opp');
+    if(selPanel){
+      var stepsDiv=selPanel.querySelector('.steps');
+      if(stepsDiv) selPanel.insertBefore(nwBlock,stepsDiv);
+      else selPanel.appendChild(nwBlock);
+    }
+  }
+  nwBlock.innerHTML=chainInfoHtml;
+
   g('step3-detail').innerHTML='Deschide <b style="color:'+sellColor+'">'+sellName+'</b> la perechea <b>'+r.coin+'/'+r.quote+'</b>';
   var sl3=g('step3-link');sl3.href=sellUrl;sl3.textContent='→ Deschide '+sellName;sl3.style.color=sellColor;sl3.style.borderColor=sellColor+'44';
 
@@ -1575,6 +1973,7 @@ function initStartBtn(){
       startWS_CryptoCom(); startWS_HTX(); startWS_BitMart();
       // discoverCoins din Binance/Bybit/OKX (CORS-friendly)
       discoverCoins(function(){xlog('🔍 '+COINS.length+' monede după discovery','ok');});
+      fetchWithdrawalChains(); // fetch chain data din Gate, Bitget, HTX, KuCoin
       setTimeout(scanLoop, 1500);
     }
   });
